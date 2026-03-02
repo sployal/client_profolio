@@ -2,34 +2,15 @@
 
 import { useState, useEffect, useRef, ReactNode } from "react";
 
-/* ─── Google Fonts (loaded via next/head or just a link tag in layout) ──────── */
-// Add to your layout.tsx / _document.tsx:
-// <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-/* ─── tailwind.config.js – extend these colours/fonts: ─────────────────────────
-  theme: {
-    extend: {
-      colors: {
-        ink:    '#0a0a0f',
-        paper:  '#f5f2ec',
-        panel:  '#edeae2',
-        card:   '#fffdf9',
-        accent: '#1a3a5c',
-        gold:   '#c8933a',
-        muted:  '#6b6b78',
-        border: '#d4cfc4',
-      },
-      fontFamily: {
-        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        mono:  ['"DM Mono"', 'monospace'],
-        sans:  ['"Bricolage Grotesque"', 'sans-serif'],
-      },
-    },
-  },
-──────────────────────────────────────────────────────────────────────────────── */
-
 /* ─── Data ───────────────────────────────────────────────────────────────────── */
 const NAV = ["About", "Education", "Skills", "Publications", "Contact"];
+
+const ROLES = [
+  "Statistician",
+  "Research Officer",
+  "Data Analyst",
+  "ML Researcher",
+];
 
 const PUBLICATIONS = [
   { title: "Evaluating Performance of Selected Single Classifiers with XAI in Prediction of Mental Health Distress Among University Students", journal: "American Journal of Artificial Intelligence", year: 2025 },
@@ -73,17 +54,46 @@ const MEMBERSHIPS = [
   "Applied Malaria Modeling Network (AMMNet)",
 ];
 
-/* ─── Inline style tokens (fallback for custom colours not in default Tailwind) */
-const C = {
-  ink:    "#0a0a0f",
-  paper:  "#f5f2ec",
-  panel:  "#edeae2",
-  card:   "#fffdf9",
-  accent: "#1a3a5c",
-  gold:   "#c8933a",
-  muted:  "#6b6b78",
-  border: "#d4cfc4",
-};
+/* ─── Typewriter hook ─────────────────────────────────────────────────────────── */
+function useTypewriter(words: string[]) {
+  const [display, setDisplay] = useState("");
+  const [wordIdx, setWordIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  const [showCursor, setShowCursor] = useState(true);
+
+  useEffect(() => {
+    const cursorInterval = setInterval(() => setShowCursor(v => !v), 530);
+    return () => clearInterval(cursorInterval);
+  }, []);
+
+  useEffect(() => {
+    const word = words[wordIdx];
+    let timeout: ReturnType<typeof setTimeout>;
+
+    if (!deleting && charIdx <= word.length) {
+      timeout = setTimeout(() => {
+        setDisplay(word.slice(0, charIdx));
+        setCharIdx(c => c + 1);
+      }, 80);
+    } else if (!deleting && charIdx > word.length) {
+      timeout = setTimeout(() => setDeleting(true), 1600);
+    } else if (deleting && charIdx >= 0) {
+      timeout = setTimeout(() => {
+        setDisplay(word.slice(0, charIdx));
+        setCharIdx(c => c - 1);
+      }, 45);
+    } else {
+      setDeleting(false);
+      setWordIdx(i => (i + 1) % words.length);
+      setCharIdx(0);
+    }
+
+    return () => clearTimeout(timeout);
+  }, [charIdx, deleting, wordIdx, words]);
+
+  return { display, showCursor };
+}
 
 /* ─── Reveal hook ─────────────────────────────────────────────────────────────── */
 function useReveal(threshold = 0.12) {
@@ -106,14 +116,11 @@ function Reveal({ children, delay = 0, dir = "up" }: {
   const { ref, visible } = useReveal();
   const translate = dir === "left" ? "translateX(-28px)" : dir === "right" ? "translateX(28px)" : "translateY(28px)";
   return (
-    <div
-      ref={ref}
-      style={{
-        opacity:    visible ? 1 : 0,
-        transform:  visible ? "none" : translate,
-        transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
-      }}
-    >
+    <div ref={ref} style={{
+      opacity: visible ? 1 : 0,
+      transform: visible ? "none" : translate,
+      transition: `opacity 0.6s ease ${delay}ms, transform 0.6s ease ${delay}ms`,
+    }}>
       {children}
     </div>
   );
@@ -123,20 +130,18 @@ function Reveal({ children, delay = 0, dir = "up" }: {
 function SkillBar({ name, level }: { name: string; level: number }) {
   const { ref, visible } = useReveal(0.2);
   return (
-    <div ref={ref} className="mb-4">
-      <div className="flex justify-between mb-1">
-        <span className="text-sm font-medium" style={{ color: C.ink, fontFamily: "'Bricolage Grotesque', sans-serif" }}>{name}</span>
-        <span className="text-xs" style={{ color: C.muted, fontFamily: "'DM Mono', monospace" }}>{level}%</span>
+    <div ref={ref} style={{ marginBottom: "1.1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: ".4rem" }}>
+        <span style={{ fontFamily: "var(--sans)", fontSize: ".88rem", fontWeight: 500, color: "var(--ink)" }}>{name}</span>
+        <span style={{ fontFamily: "var(--mono)", fontSize: ".75rem", color: "var(--muted)" }}>{level}%</span>
       </div>
-      <div className="h-[3px] rounded-full" style={{ background: C.border }}>
-        <div
-          className="h-full rounded-full"
-          style={{
-            background:  `linear-gradient(90deg, ${C.accent}, ${C.gold})`,
-            width:       visible ? `${level}%` : "0%",
-            transition:  "width 1.1s cubic-bezier(.4,0,.2,1) 150ms",
-          }}
-        />
+      <div style={{ height: "3px", background: "var(--border)", borderRadius: "2px" }}>
+        <div style={{
+          height: "100%", borderRadius: "2px",
+          background: "linear-gradient(90deg, var(--accent), var(--gold))",
+          width: visible ? `${level}%` : "0%",
+          transition: "width 1.1s cubic-bezier(.4,0,.2,1) 150ms",
+        }} />
       </div>
     </div>
   );
@@ -165,6 +170,7 @@ function useScrollSpy(ids: string[]) {
 export default function Portfolio() {
   const [menuOpen, setMenuOpen] = useState(false);
   const active = useScrollSpy(NAV);
+  const { display, showCursor } = useTypewriter(ROLES);
 
   const scrollTo = (s: string) => {
     document.getElementById(s.toLowerCase())?.scrollIntoView({ behavior: "smooth" });
@@ -172,415 +178,524 @@ export default function Portfolio() {
   };
 
   return (
-    <div style={{ background: C.paper, color: C.ink, fontFamily: "'Bricolage Grotesque', sans-serif" }}>
-
-      {/* Load fonts */}
+    <div style={{ fontFamily: "var(--sans)", color: "var(--ink)" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Bricolage+Grotesque:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
+
+        :root {
+          --ink:    #1c1f2e;
+          --paper:  #f7f5f0;
+          --accent: #1a3a5c;
+          --gold:   #c8933a;
+          --muted:  #6b6b78;
+          --border: #dddad3;
+          --card:   #ffffff;
+          --mono:   'DM Mono', monospace;
+          --serif:  'Cormorant Garamond', Georgia, serif;
+          --sans:   'Bricolage Grotesque', sans-serif;
+
+          /* ── Aesthetic section backgrounds ── */
+          --bg-hero:        linear-gradient(145deg, #faf8f4 0%, #eef4fb 50%, #f4f0fa 100%);
+          --bg-about:       linear-gradient(160deg, #edf4fb 0%, #f0ebf7 60%, #fdf4ed 100%);
+          --bg-education:   linear-gradient(150deg, #f8f5ff 0%, #fffbf0 60%, #f0f8ff 100%);
+          --bg-skills:      linear-gradient(155deg, #f0faf4 0%, #f5f0ff 50%, #fff8f0 100%);
+          --bg-pubs:        linear-gradient(145deg, #fefcf8 0%, #f0f6ff 50%, #fdf8fe 100%);
+        }
+
+        body { background: #f7f5f0; }
+
+        /* ── NAV ── */
+        nav {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 1rem 2.5rem;
+          background: rgba(250,248,244,0.92);
+          backdrop-filter: blur(14px);
+          border-bottom: 1px solid rgba(200,147,58,0.15);
+        }
+        .brand {
+          font-family: var(--sans); font-weight: 700; font-size: 1rem;
+          color: var(--accent); background: none; border: none; cursor: pointer;
+          letter-spacing: -.01em;
+        }
+        .nav-links { display: flex; gap: 2.2rem; list-style: none; }
+        .nav-links button {
+          font-family: var(--sans); font-size: .82rem; font-weight: 500;
+          color: var(--muted); background: none; border: none; cursor: pointer;
+          letter-spacing: .03em; transition: color .2s; padding: 0;
+        }
+        .nav-links button:hover,
+        .nav-links button.active { color: var(--accent); }
+        .hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; }
+        .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink); }
+
+        /* ── HERO ── */
+        #hero {
+          min-height: 100vh; display: flex; flex-direction: column;
+          align-items: center; justify-content: center; text-align: center;
+          padding: 8rem 1.5rem 5rem;
+          background: var(--bg-hero);
+          position: relative; overflow: hidden;
+        }
+        /* Soft decorative blobs */
+        #hero::before {
+          content: ''; position: absolute;
+          width: 520px; height: 520px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(167,197,235,0.22) 0%, transparent 70%);
+          top: -80px; right: -100px; pointer-events: none;
+        }
+        #hero::after {
+          content: ''; position: absolute;
+          width: 400px; height: 400px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(200,147,58,0.1) 0%, transparent 70%);
+          bottom: -60px; left: -80px; pointer-events: none;
+        }
+
+        .hero-name {
+          font-family: var(--serif); font-size: clamp(2.8rem, 6vw, 4.2rem);
+          font-weight: 600; color: var(--ink); letter-spacing: -.01em; margin-bottom: .6rem;
+          position: relative; z-index: 1;
+        }
+
+        /* ── TYPEWRITER ROLE ── */
+        .hero-role-wrap {
+          display: inline-flex; align-items: center; gap: 0;
+          margin-bottom: 1.6rem; position: relative; z-index: 1;
+        }
+        .hero-role-text {
+          font-family: var(--serif);
+          font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+          font-style: italic;
+          font-weight: 300;
+          /* Vibrant teal-to-violet gradient */
+          background: linear-gradient(100deg, #0e7fa8 0%, #7c3aed 60%, #c8933a 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: .01em;
+          min-height: 2.2rem;
+          line-height: 1.3;
+        }
+        .hero-cursor {
+          display: inline-block; width: 2px; height: 1.4em;
+          background: linear-gradient(180deg, #0e7fa8, #7c3aed);
+          border-radius: 1px; margin-left: 3px; vertical-align: middle;
+          transition: opacity .1s;
+        }
+
+        .hero-bio {
+          font-family: var(--sans); max-width: 560px; margin: 0 auto 2rem;
+          font-size: .93rem; color: var(--muted); line-height: 1.8;
+          position: relative; z-index: 1;
+        }
+        .hero-btns {
+          display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+          margin-bottom: 2rem; position: relative; z-index: 1;
+        }
+        .btn-primary {
+          font-family: var(--sans); padding: .7rem 1.7rem;
+          background: var(--accent); color: #fff;
+          border: none; cursor: pointer; font-size: .8rem; font-weight: 600;
+          letter-spacing: .06em; transition: background .2s, transform .15s; border-radius: 3px;
+        }
+        .btn-primary:hover { background: var(--gold); transform: translateY(-1px); }
+        .btn-outline {
+          font-family: var(--sans); padding: .7rem 1.7rem;
+          background: transparent; color: var(--accent);
+          border: 1.5px solid var(--accent); cursor: pointer;
+          font-size: .8rem; font-weight: 600; letter-spacing: .06em;
+          transition: background .2s, color .2s, transform .15s; border-radius: 3px;
+        }
+        .btn-outline:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
+        .social-row { display: flex; gap: 1.1rem; justify-content: center; position: relative; z-index: 1; }
+        .social-icon {
+          width: 38px; height: 38px; border-radius: 50%;
+          border: 1.5px solid var(--border);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1rem; text-decoration: none; color: var(--ink);
+          transition: border-color .2s, color .2s, transform .15s;
+          background: rgba(255,255,255,0.6);
+        }
+        .social-icon:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+
+        /* ── SECTION SHARED ── */
+        .sec { padding: 5.5rem 1.5rem; }
+        .sec-inner { max-width: 1060px; margin: 0 auto; }
+        .sec-label {
+          text-align: center; font-family: var(--mono);
+          font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
+          color: var(--gold); margin-bottom: .6rem;
+        }
+        .sec-title {
+          font-family: var(--serif); text-align: center;
+          font-size: clamp(1.9rem, 4vw, 2.8rem); font-weight: 300;
+          color: var(--accent); margin-bottom: .75rem;
+        }
+        .sec-title em { font-style: italic; }
+        .sec-sub {
+          font-family: var(--sans); text-align: center; max-width: 540px;
+          margin: 0 auto 3rem; font-size: .9rem; color: var(--muted); line-height: 1.75;
+        }
+
+        /* ── ABOUT ── */
+        #about {
+          padding: 5.5rem 1.5rem;
+          background: var(--bg-about);
+          position: relative; overflow: hidden;
+        }
+        #about::before {
+          content: ''; position: absolute; pointer-events: none;
+          width: 350px; height: 350px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%);
+          top: 0; right: 10%;
+        }
+        .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem; align-items: center; }
+        .about-photo {
+          width: 100%; border-radius: 18px; min-height: 460px;
+          background: linear-gradient(145deg, #1a3a5c 0%, #2d6498 60%, #1e5c8a 100%);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 8rem; overflow: hidden;
+          box-shadow: 0 20px 60px rgba(26,58,92,0.2);
+        }
+        .about-text h3 {
+          font-family: var(--serif); font-size: 1.7rem; font-weight: 600;
+          color: var(--accent); margin-bottom: 1rem;
+        }
+        .about-text p {
+          font-family: var(--sans); font-size: .9rem;
+          color: #3a3a45; line-height: 1.85; margin-bottom: .9rem;
+        }
+        .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.75rem; }
+        .stat-card {
+          background: rgba(255,255,255,0.75); border: 1px solid rgba(200,147,58,0.2);
+          backdrop-filter: blur(6px);
+          padding: 1.2rem 1rem; text-align: center; border-radius: 10px;
+          transition: box-shadow .25s, transform .25s;
+        }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,58,92,0.1); }
+        .stat-num { font-family: var(--serif); font-size: 2.2rem; font-weight: 600; color: var(--accent); line-height: 1; }
+        .stat-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); margin-top: .3rem; letter-spacing: .1em; text-transform: uppercase; }
+
+        /* ── EDUCATION ── */
+        #education {
+          padding: 5.5rem 1.5rem;
+          background: var(--bg-education);
+          position: relative; overflow: hidden;
+        }
+        #education::after {
+          content: ''; position: absolute; pointer-events: none;
+          width: 300px; height: 300px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(14,127,168,0.07) 0%, transparent 70%);
+          bottom: 5%; left: 5%;
+        }
+        .edu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .edu-card {
+          border: 1px solid rgba(200,147,58,0.15); padding: 1.75rem;
+          background: rgba(255,255,255,0.7); border-radius: 12px;
+          backdrop-filter: blur(8px);
+          transition: box-shadow .25s, transform .25s;
+        }
+        .edu-card:hover { box-shadow: 0 10px 36px rgba(26,58,92,0.1); transform: translateY(-2px); }
+        .edu-icon {
+          width: 42px; height: 42px; border-radius: 10px;
+          background: linear-gradient(135deg, #dbeafe, #ede9fe);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1.3rem; margin-bottom: 1rem;
+        }
+        .edu-degree { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--accent); margin-bottom: .35rem; }
+        .edu-school { font-family: var(--sans); font-size: .82rem; color: var(--muted); margin-bottom: .6rem; }
+        .edu-year { font-family: var(--mono); font-size: .72rem; color: var(--gold); font-weight: 500; }
+        .edu-desc { font-family: var(--sans); margin-top: .9rem; font-size: .82rem; color: var(--muted); line-height: 1.7; }
+        .mission-box {
+          background: rgba(255,255,255,0.65); border-left: 3px solid var(--gold);
+          padding: 1.75rem 2rem; margin-top: 2rem; border-radius: 0 10px 10px 0;
+          backdrop-filter: blur(6px);
+        }
+        .mission-box p { font-family: var(--sans); font-size: .9rem; color: #3a3a45; line-height: 1.85; }
+        .mission-box strong { color: var(--ink); }
+        .tags-row { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
+        .tag {
+          font-family: var(--sans); padding: .35rem .9rem; border-radius: 99px;
+          border: 1px solid rgba(26,58,92,0.2);
+          background: rgba(255,255,255,0.7);
+          font-size: .75rem; color: var(--accent); font-weight: 500;
+        }
+
+        /* ── SKILLS ── */
+        #skills {
+          padding: 5.5rem 1.5rem;
+          background: var(--bg-skills);
+          position: relative; overflow: hidden;
+        }
+        #skills::before {
+          content: ''; position: absolute; pointer-events: none;
+          width: 400px; height: 400px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(200,147,58,0.08) 0%, transparent 70%);
+          top: 10%; right: -5%;
+        }
+        .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
+        .skills-group h4 {
+          font-family: var(--mono); font-size: .72rem; font-weight: 500;
+          letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
+          margin-bottom: 1.5rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+        }
+        .interests-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-top: 1rem; }
+        .int-card {
+          background: rgba(255,255,255,0.7); border: 1px solid rgba(200,147,58,0.15);
+          padding: 1.35rem; text-align: center; border-radius: 10px;
+          backdrop-filter: blur(6px);
+          transition: box-shadow .25s, transform .25s;
+        }
+        .int-card:hover { box-shadow: 0 8px 28px rgba(26,58,92,0.1); transform: translateY(-2px); }
+        .int-icon { font-size: 1.6rem; display: block; margin-bottom: .55rem; }
+        .int-title { font-family: var(--serif); font-size: .98rem; font-weight: 600; color: var(--accent); margin-bottom: .3rem; }
+        .int-desc { font-family: var(--sans); font-size: .75rem; color: var(--muted); line-height: 1.55; }
+
+        /* ── PUBLICATIONS ── */
+        #publications {
+          padding: 5.5rem 1.5rem;
+          background: var(--bg-pubs);
+          position: relative; overflow: hidden;
+        }
+        #publications::after {
+          content: ''; position: absolute; pointer-events: none;
+          width: 350px; height: 350px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%);
+          bottom: 0; right: 5%;
+        }
+        .pub-item {
+          display: flex; gap: 1.25rem; align-items: flex-start;
+          padding: 1.35rem 0; border-bottom: 1px solid rgba(212,207,196,0.6);
+        }
+        .pub-year { font-family: var(--mono); min-width: 48px; font-size: .72rem; font-weight: 500; color: var(--gold); padding-top: .2rem; flex-shrink: 0; }
+        .pub-title { font-family: var(--serif); font-size: 1rem; font-weight: 400; color: var(--accent); margin-bottom: .25rem; line-height: 1.45; }
+        .pub-journal { font-family: var(--sans); font-size: .78rem; color: var(--muted); font-style: italic; }
+
+        /* ── CONTACT ── */
+        #contact { padding: 5.5rem 1.5rem; background: var(--ink); }
+        .c-item {
+          display: flex; gap: 1rem; align-items: center;
+          margin-bottom: 1.2rem; text-decoration: none;
+        }
+        .c-icon {
+          width: 40px; height: 40px;
+          border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1rem; flex-shrink: 0; transition: border-color .2s, background .2s;
+        }
+        .c-item:hover .c-icon { border-color: var(--gold); background: rgba(200,147,58,0.1); }
+        .c-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .1rem; }
+        .c-val { font-family: var(--sans); font-size: .85rem; color: rgba(245,242,236,.85); font-weight: 500; }
+        .f-input {
+          background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+          border-radius: 4px; padding: .8rem 1rem;
+          color: #f5f2ec; font-family: var(--sans); font-size: .87rem;
+          outline: none; transition: border-color .2s; width: 100%;
+        }
+        .f-input::placeholder { color: rgba(245,242,236,.25); }
+        .f-input:focus { border-color: var(--gold); }
+
+        /* ── FOOTER ── */
+        footer {
+          text-align: center; padding: 1.5rem;
+          background: #050508; color: rgba(245,242,236,.25);
+          font-family: var(--mono); font-size: .7rem; letter-spacing: .08em;
+        }
+
+        /* ── MOBILE ── */
+        @media (max-width: 768px) {
+          nav { padding: .9rem 1.25rem; }
+          .nav-links { display: none; }
+          .nav-links.open {
+            display: flex; flex-direction: column; position: fixed;
+            top: 57px; left: 0; right: 0;
+            background: rgba(250,248,244,.97);
+            border-bottom: 1px solid var(--border);
+            padding: 1.25rem 1.5rem; gap: 1rem; z-index: 199;
+          }
+          .hamburger { display: flex; }
+          .sec, #about, #education, #skills, #publications, #contact { padding: 4rem 1.25rem; }
+          .about-grid, .edu-grid, .skills-grid { grid-template-columns: 1fr; gap: 2rem; }
+          .contact-grid { grid-template-columns: 1fr; gap: 2rem; }
+          .interests-grid { grid-template-columns: 1fr 1fr; }
+          .hero-name { font-size: 2.4rem; }
+        }
+        @media (max-width: 480px) {
+          .interests-grid { grid-template-columns: 1fr; }
+        }
       `}</style>
 
-      {/* ── NAV ─────────────────────────────────────────────────────────────── */}
-      <nav
-        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 backdrop-blur-md border-b"
-        style={{ background: "rgba(245,242,236,0.94)", borderColor: C.border }}
-      >
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="font-bold text-base tracking-tight"
-          style={{ color: C.ink, fontFamily: "'Bricolage Grotesque', sans-serif", background: "none", border: "none", cursor: "pointer" }}
-        >
+      {/* ── NAV ── */}
+      <nav>
+        <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           Victor Lumumba Wandera
         </button>
-
-        {/* Desktop links */}
-        <ul className="hidden md:flex gap-8 list-none">
+        <ul className={`nav-links${menuOpen ? " open" : ""}`}>
           {NAV.map((n) => (
             <li key={n}>
-              <button
-                onClick={() => scrollTo(n)}
-                className="text-sm font-medium tracking-wide transition-colors duration-200"
-                style={{
-                  color: active === n ? C.accent : C.muted,
-                  fontFamily: "'Bricolage Grotesque', sans-serif",
-                  background: "none", border: "none", cursor: "pointer",
-                  borderBottom: active === n ? `1px solid ${C.gold}` : "1px solid transparent",
-                  paddingBottom: "2px",
-                }}
-              >
-                {n}
-              </button>
+              <button className={active === n ? "active" : ""} onClick={() => scrollTo(n)}>{n}</button>
             </li>
           ))}
         </ul>
-
-        {/* Hamburger */}
-        <button
-          className="flex md:hidden flex-col gap-1 p-1"
-          onClick={() => setMenuOpen(!menuOpen)}
-          style={{ background: "none", border: "none", cursor: "pointer" }}
-        >
-          <span className="block w-5 h-0.5" style={{ background: C.ink }} />
-          <span className="block w-5 h-0.5" style={{ background: C.ink }} />
-          <span className="block w-5 h-0.5" style={{ background: C.ink }} />
+        <button className="hamburger" onClick={() => setMenuOpen(!menuOpen)} aria-label="menu">
+          <span /><span /><span />
         </button>
-
-        {/* Mobile menu */}
-        {menuOpen && (
-          <div
-            className="absolute top-full left-0 right-0 flex flex-col gap-4 px-6 py-5 border-b md:hidden"
-            style={{ background: C.paper, borderColor: C.border }}
-          >
-            {NAV.map((n) => (
-              <button
-                key={n}
-                onClick={() => scrollTo(n)}
-                className="text-left text-sm font-medium"
-                style={{ color: active === n ? C.accent : C.muted, fontFamily: "'Bricolage Grotesque', sans-serif", background: "none", border: "none", cursor: "pointer" }}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        )}
       </nav>
 
-      {/* ── HERO ─────────────────────────────────────────────────────────────── */}
-      <section
-        id="hero"
-        className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-20"
-        style={{ background: C.paper }}
-      >
+      {/* ── HERO ── */}
+      <section id="hero">
         <Reveal>
-          <h1
-            className="text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-3"
-            style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.ink, letterSpacing: "-0.01em" }}
-          >
-            Victor Lumumba Wandera
-          </h1>
+          <h1 className="hero-name">Victor Lumumba Wandera</h1>
         </Reveal>
 
-        <Reveal delay={120}>
-          <p className="text-lg font-normal mb-6" style={{ color: C.muted }}>
-            Statistician | Research Officer | Data Analyst
-          </p>
+        {/* Typewriter role */}
+        <Reveal delay={100}>
+          <div className="hero-role-wrap">
+            <span className="hero-role-text">{display}</span>
+            <span className="hero-cursor" style={{ opacity: showCursor ? 1 : 0 }} />
+          </div>
         </Reveal>
 
         <Reveal delay={220}>
-          <p className="max-w-xl mx-auto text-sm leading-relaxed mb-8" style={{ color: C.muted }}>
+          <p className="hero-bio">
             Welcome to my portfolio. I'm a dedicated statistician and data analyst at Chuka
             University's Centre for Data Analytics and Modelling, with peer-reviewed publications
             in international journals. Explore my research and let's build knowledge together.
           </p>
         </Reveal>
-
         <Reveal delay={320}>
-          <div className="flex gap-4 flex-wrap justify-center mb-8">
-            <button
-              onClick={() => scrollTo("Publications")}
-              className="px-6 py-2.5 text-xs font-semibold tracking-widest uppercase text-white transition-all duration-200"
-              style={{ background: C.accent, border: "none", cursor: "pointer", borderRadius: "2px" }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.gold)}
-              onMouseLeave={e => (e.currentTarget.style.background = C.accent)}
-            >
-              View Research
-            </button>
-            <button
-              onClick={() => scrollTo("Contact")}
-              className="px-6 py-2.5 text-xs font-semibold tracking-widest uppercase transition-all duration-200"
-              style={{ background: "transparent", border: `1.5px solid ${C.accent}`, color: C.accent, cursor: "pointer", borderRadius: "2px" }}
-              onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = C.accent; }}
-            >
-              Get In Touch
-            </button>
+          <div className="hero-btns">
+            <button className="btn-primary" onClick={() => scrollTo("Publications")}>View Research</button>
+            <button className="btn-outline" onClick={() => scrollTo("Contact")}>Get In Touch</button>
           </div>
         </Reveal>
-
         <Reveal delay={420}>
-          <div className="flex gap-3 justify-center">
-            {[
-              { href: "mailto:lumumbavictor172@gmail.com", label: "✉" },
-              { href: "https://beyonddataanalytics.online", label: "🌐" },
-              { href: "tel:+254706038599", label: "☎" },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                target={s.href.startsWith("http") ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                className="w-10 h-10 rounded-full flex items-center justify-center text-base transition-all duration-200"
-                style={{ border: `1.5px solid ${C.border}`, color: C.ink, textDecoration: "none" }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.gold; e.currentTarget.style.color = C.gold; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.ink; }}
-              >
-                {s.label}
-              </a>
-            ))}
+          <div className="social-row">
+            <a className="social-icon" href="mailto:lumumbavictor172@gmail.com" title="Email">✉</a>
+            <a className="social-icon" href="https://beyonddataanalytics.online" target="_blank" rel="noopener noreferrer" title="Website">🌐</a>
+            <a className="social-icon" href="tel:+254706038599" title="Phone">☎</a>
           </div>
         </Reveal>
       </section>
 
-      {/* ── ABOUT ────────────────────────────────────────────────────────────── */}
-      <section id="about" className="px-6 py-24" style={{ background: C.panel }}>
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <p className="text-center text-xs font-medium tracking-widest uppercase mb-2" style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}>
-              About Me
-            </p>
-          </Reveal>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center mt-4">
-            {/* Photo */}
+      {/* ── ABOUT ── */}
+      <section id="about" className="sec">
+        <div className="sec-inner">
+          <Reveal><p className="sec-label">About Me</p></Reveal>
+          <div className="about-grid" style={{ marginTop: "1rem" }}>
             <Reveal dir="left">
-              <div
-                className="w-full rounded-2xl flex items-center justify-center text-8xl overflow-hidden"
-                style={{ minHeight: "460px", background: `linear-gradient(145deg, ${C.accent} 0%, #2d6498 100%)` }}
-              >
-                👨🏾‍💼
-              </div>
+              <div className="about-photo">👨🏾‍💼</div>
             </Reveal>
-
-            {/* Text */}
             <Reveal dir="right">
-              <h3
-                className="text-3xl font-semibold mb-4"
-                style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-              >
-                Hi! I'm Victor Lumumba Wandera
-              </h3>
-              <p className="text-sm leading-loose mb-4" style={{ color: "#3a3a45" }}>
-                A dynamic statistician and data analyst based at Chuka University's Centre for
-                Data Analytics and Modelling (CDAM). My passion lies in leveraging statistical
-                methods and machine learning to extract meaningful insights from complex datasets.
-              </p>
-              <p className="text-sm leading-loose mb-4" style={{ color: "#3a3a45" }}>
-                I have contributed to peer-reviewed journals in AI, public health, epidemiology,
-                and financial analytics. What drives me is the ability to build evidence-based
-                solutions that make a meaningful impact on society.
-              </p>
-              <p className="text-sm leading-loose" style={{ color: "#3a3a45" }}>
-                I am always learning, exploring new methodologies, and finding better ways to
-                model the world. Every research project is an opportunity to grow and contribute.
-              </p>
-
-              {/* Stat cards */}
-              <div className="grid grid-cols-2 gap-4 mt-7">
-                {[
-                  { num: "8+", lbl: "Publications" },
-                  { num: "5+", lbl: "Years Experience" },
-                  { num: "3",  lbl: "Memberships" },
-                  { num: "2",  lbl: "Degrees" },
-                ].map(({ num, lbl }) => (
-                  <div
-                    key={lbl}
-                    className="text-center px-4 py-5 border transition-all duration-200 cursor-default"
-                    style={{ background: C.card, borderColor: C.border, borderRadius: "2px" }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-3px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 24px rgba(0,0,0,0.07)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = ""; }}
-                  >
-                    <div
-                      className="text-4xl font-semibold leading-none mb-1"
-                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-                    >
-                      {num}
+              <div className="about-text">
+                <h3>Hi! I'm Victor Lumumba Wandera</h3>
+                <p>
+                  A dynamic statistician and data analyst based at Chuka University's Centre for
+                  Data Analytics and Modelling (CDAM). My passion lies in leveraging statistical
+                  methods and machine learning to extract meaningful insights from complex datasets.
+                </p>
+                <p>
+                  I have contributed to peer-reviewed journals in AI, public health, epidemiology,
+                  and financial analytics. What drives me is the ability to build evidence-based
+                  solutions that make a meaningful impact — because great analysis isn't just about
+                  numbers, it's about crafting insights that are actionable and useful.
+                </p>
+                <p>
+                  I am always learning, exploring new methodologies, and finding better ways to
+                  model the world. Every research project is an opportunity to grow and contribute
+                  to the evolving landscape of data science.
+                </p>
+                <div className="stat-cards">
+                  {[["8+","Publications"],["5+","Years Experience"],["3","Memberships"],["2","Degrees"]].map(([n,l]) => (
+                    <div className="stat-card" key={l}>
+                      <div className="stat-num">{n}</div>
+                      <div className="stat-lbl">{l}</div>
                     </div>
-                    <div
-                      className="text-xs uppercase tracking-widest"
-                      style={{ fontFamily: "'DM Mono', monospace", color: C.muted }}
-                    >
-                      {lbl}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ── EDUCATION ────────────────────────────────────────────────────────── */}
-      <section id="education" className="px-6 py-24" style={{ background: C.paper }}>
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <p className="text-center text-xs font-medium tracking-widest uppercase mb-2" style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}>
-              Educational Background
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2
-              className="text-center text-4xl font-light mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-            >
-              Academic <em>Journey</em>
-            </h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="text-center text-sm leading-relaxed max-w-md mx-auto mb-12" style={{ color: C.muted }}>
-              Built on a strong quantitative foundation at Chuka University.
-            </p>
-          </Reveal>
+      {/* ── EDUCATION ── */}
+      <section id="education" className="sec">
+        <div className="sec-inner">
+          <Reveal><p className="sec-label">Educational Background</p></Reveal>
+          <Reveal delay={80}><h2 className="sec-title">Academic <em>Journey</em></h2></Reveal>
+          <Reveal delay={140}><p className="sec-sub">Built on a strong quantitative foundation at Chuka University.</p></Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                icon: "🎓",
-                degree: "Master of Science in Applied Statistics",
-                school: "Chuka University, Chuka",
-                years: "May 2023 – May 2025",
-                desc: "Advanced training in statistical modelling, machine learning, survival analysis, time series, and explainable AI — culminating in multiple peer-reviewed publications.",
-              },
-              {
-                icon: "🏅",
-                degree: "BSc Economics & Statistics",
-                school: "Chuka University — 2nd Class Hons. (Upper Division)",
-                years: "Sep 2016 – Dec 2020",
-                desc: "Solid grounding in econometrics, statistical theory, probability, and research methods — forming the bedrock for postgraduate and applied research work.",
-              },
-            ].map(({ icon, degree, school, years, desc }, i) => (
-              <Reveal key={degree} dir={i === 0 ? "left" : "right"} delay={80}>
-                <div
-                  className="p-7 border transition-all duration-200"
-                  style={{ background: C.card, borderColor: C.border, borderRadius: "2px" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.07)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = ""; }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-lg flex items-center justify-center text-xl mb-4"
-                    style={{ background: "#eef2f8" }}
-                  >
-                    {icon}
-                  </div>
-                  <p
-                    className="text-lg font-semibold mb-1"
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-                  >
-                    {degree}
-                  </p>
-                  <p className="text-xs mb-3" style={{ color: C.muted }}>{school}</p>
-                  <span
-                    className="text-xs font-medium"
-                    style={{ fontFamily: "'DM Mono', monospace", color: C.gold }}
-                  >
-                    📅 {years}
-                  </span>
-                  <p className="text-xs leading-relaxed mt-4" style={{ color: C.muted }}>{desc}</p>
-                </div>
-              </Reveal>
-            ))}
+          <div className="edu-grid">
+            <Reveal dir="left" delay={80}>
+              <div className="edu-card">
+                <div className="edu-icon">🎓</div>
+                <p className="edu-degree">Master of Science in Applied Statistics</p>
+                <p className="edu-school">Chuka University, Chuka</p>
+                <span className="edu-year">📅 May 2023 – May 2025</span>
+                <p className="edu-desc">Advanced training in statistical modelling, machine learning, survival analysis, time series, and explainable AI — culminating in multiple peer-reviewed publications in international journals.</p>
+              </div>
+            </Reveal>
+            <Reveal dir="right" delay={80}>
+              <div className="edu-card">
+                <div className="edu-icon">🏅</div>
+                <p className="edu-degree">BSc Economics & Statistics</p>
+                <p className="edu-school">Chuka University — 2nd Class Hons. (Upper Division)</p>
+                <span className="edu-year">📅 Sep 2016 – Dec 2020</span>
+                <p className="edu-desc">Solid grounding in econometrics, statistical theory, probability, and research methods — forming the bedrock for postgraduate and applied research work in data analytics and modelling.</p>
+              </div>
+            </Reveal>
           </div>
 
-          {/* Mission */}
           <Reveal delay={100}>
-            <div
-              className="mt-8 px-8 py-7"
-              style={{ background: C.card, borderLeft: `3px solid ${C.gold}`, borderRadius: "0 2px 2px 0" }}
-            >
-              <p className="text-sm leading-loose" style={{ color: "#3a3a45" }}>
-                <strong style={{ color: C.ink }}>Mission Statement: </strong>
-                To skillfully apply statistical and research expertise to generate actionable insights.
-                As a dedicated statistician and aspiring research officer, I am committed to conducting
-                meticulous quantitative and qualitative analyses that empower informed decision-making.
-                By employing cutting-edge methodologies, I strive to unravel meaningful patterns within
-                data — contributing to innovation and evidence-based profitability.
-              </p>
+            <div className="mission-box">
+              <p><strong>Mission Statement: </strong>To skillfully apply statistical and research expertise to generate actionable insights. As a dedicated statistician and aspiring research officer, I am committed to conducting meticulous quantitative and qualitative analyses that empower informed decision-making. By employing cutting-edge methodologies, I strive to unravel meaningful patterns within data — contributing to innovation and evidence-based profitability.</p>
             </div>
           </Reveal>
-
-          {/* Memberships */}
           <Reveal delay={120}>
-            <div className="mt-10">
-              <p
-                className="text-xs font-medium tracking-widest uppercase mb-4"
-                style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}
-              >
-                Professional Memberships
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {MEMBERSHIPS.map((m) => (
-                  <span
-                    key={m}
-                    className="px-4 py-1.5 text-xs font-medium rounded-full border"
-                    style={{ background: C.card, borderColor: C.border, color: C.accent }}
-                  >
-                    {m}
-                  </span>
-                ))}
+            <div style={{ marginTop: "2.5rem" }}>
+              <p className="sec-label" style={{ textAlign: "left" }}>Professional Memberships</p>
+              <div className="tags-row">
+                {MEMBERSHIPS.map((m) => <span className="tag" key={m}>{m}</span>)}
               </div>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ── SKILLS ───────────────────────────────────────────────────────────── */}
-      <section id="skills" className="px-6 py-24" style={{ background: C.panel }}>
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <p className="text-center text-xs font-medium tracking-widest uppercase mb-2" style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}>
-              Skills
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2
-              className="text-center text-4xl font-light mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-            >
-              Technical <em>Proficiency</em>
-            </h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="text-center text-sm leading-relaxed max-w-md mx-auto mb-12" style={{ color: C.muted }}>
-              Proficient in a broad range of statistical tools and analytical frameworks.
-            </p>
-          </Reveal>
+      {/* ── SKILLS ── */}
+      <section id="skills" className="sec">
+        <div className="sec-inner">
+          <Reveal><p className="sec-label">Skills</p></Reveal>
+          <Reveal delay={80}><h2 className="sec-title">Technical <em>Proficiency</em></h2></Reveal>
+          <Reveal delay={140}><p className="sec-sub">Proficient in a broad range of statistical tools and analytical frameworks.</p></Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          <div className="skills-grid">
             <div>
-              <p
-                className="text-xs tracking-widest uppercase mb-6 pb-2 border-b"
-                style={{ fontFamily: "'DM Mono', monospace", color: C.gold, borderColor: C.border }}
-              >
-                Statistical Software
-              </p>
+              <h4>Statistical Software</h4>
               {SKILLS_STAT.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
             <div>
-              <p
-                className="text-xs tracking-widest uppercase mb-6 pb-2 border-b"
-                style={{ fontFamily: "'DM Mono', monospace", color: C.gold, borderColor: C.border }}
-              >
-                Analytics & Machine Learning
-              </p>
+              <h4>Analytics & Machine Learning</h4>
               {SKILLS_ML.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
           </div>
 
-          {/* Interests */}
           <Reveal delay={80}>
-            <h3
-              className="text-center text-3xl font-light mt-16 mb-6"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-            >
+            <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1.5rem", fontSize: "1.6rem", fontWeight: 300, color: "var(--accent)" }}>
               What Excites Me About Data Science
             </h3>
           </Reveal>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {INTERESTS.map(({ icon, title, desc }, i) => (
-              <Reveal key={title} delay={i * 70}>
-                <div
-                  className="p-5 border text-center transition-all duration-200"
-                  style={{ background: C.card, borderColor: C.border, borderRadius: "2px" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)"; (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.07)"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = ""; (e.currentTarget as HTMLDivElement).style.boxShadow = ""; }}
-                >
-                  <span className="block text-3xl mb-3">{icon}</span>
-                  <p
-                    className="text-base font-semibold mb-2"
-                    style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-                  >
-                    {title}
-                  </p>
-                  <p className="text-xs leading-relaxed" style={{ color: C.muted }}>{desc}</p>
+          <div className="interests-grid">
+            {INTERESTS.map((item, i) => (
+              <Reveal key={item.title} delay={i * 70}>
+                <div className="int-card">
+                  <span className="int-icon">{item.icon}</span>
+                  <p className="int-title">{item.title}</p>
+                  <p className="int-desc">{item.desc}</p>
                 </div>
               </Reveal>
             ))}
@@ -588,49 +703,20 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── PUBLICATIONS ─────────────────────────────────────────────────────── */}
-      <section id="publications" className="px-6 py-24" style={{ background: C.paper }}>
-        <div className="max-w-5xl mx-auto">
-          <Reveal>
-            <p className="text-center text-xs font-medium tracking-widest uppercase mb-2" style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}>
-              Research
-            </p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2
-              className="text-center text-4xl font-light mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-            >
-              Publications
-            </h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="text-center text-sm leading-relaxed max-w-lg mx-auto mb-12" style={{ color: C.muted }}>
-              Peer-reviewed contributions to international journals in AI, statistics, public health, and finance.
-            </p>
-          </Reveal>
-
+      {/* ── PUBLICATIONS ── */}
+      <section id="publications" className="sec">
+        <div className="sec-inner">
+          <Reveal><p className="sec-label">Research</p></Reveal>
+          <Reveal delay={80}><h2 className="sec-title">Publications</h2></Reveal>
+          <Reveal delay={140}><p className="sec-sub">Peer-reviewed contributions to international journals in AI, statistics, public health, and finance.</p></Reveal>
           <div>
             {PUBLICATIONS.map(({ title, journal, year }, i) => (
-              <Reveal key={i} delay={i * 50}>
-                <div
-                  className="flex gap-5 items-start py-5 border-b"
-                  style={{ borderColor: C.border }}
-                >
-                  <span
-                    className="text-xs font-medium shrink-0 pt-0.5"
-                    style={{ fontFamily: "'DM Mono', monospace", color: C.gold, minWidth: "44px" }}
-                  >
-                    {year}
-                  </span>
+              <Reveal key={i} delay={i * 55}>
+                <div className="pub-item">
+                  <span className="pub-year">{year}</span>
                   <div>
-                    <p
-                      className="text-base font-normal leading-snug mb-1"
-                      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.accent }}
-                    >
-                      {title}
-                    </p>
-                    <p className="text-xs italic" style={{ color: C.muted }}>{journal}</p>
+                    <p className="pub-title">{title}</p>
+                    <p className="pub-journal">{journal}</p>
                   </div>
                 </div>
               </Reveal>
@@ -639,33 +725,20 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── CONTACT ──────────────────────────────────────────────────────────── */}
-      <section id="contact" className="px-6 py-24" style={{ background: C.ink }}>
-        <div className="max-w-5xl mx-auto">
+      {/* ── CONTACT ── */}
+      <section id="contact" className="sec">
+        <div className="sec-inner">
           <Reveal>
-            <p
-              className="text-center text-xs font-medium tracking-widest uppercase mb-2"
-              style={{ color: C.gold, fontFamily: "'DM Mono', monospace" }}
-            >
-              Contact
-            </p>
+            <p className="sec-label" style={{ color: "var(--gold)" }}>Contact</p>
           </Reveal>
           <Reveal delay={80}>
-            <h2
-              className="text-center text-4xl font-light mb-3"
-              style={{ fontFamily: "'Cormorant Garamond', Georgia, serif", color: C.paper }}
-            >
-              Let's <em>Collaborate</em>
-            </h2>
+            <h2 className="sec-title" style={{ color: "#f5f2ec" }}>Let's <em>Collaborate</em></h2>
           </Reveal>
           <Reveal delay={140}>
-            <p className="text-center text-sm leading-relaxed max-w-md mx-auto mb-12" style={{ color: C.muted }}>
-              Open to research collaborations, consulting engagements, and academic partnerships.
-            </p>
+            <p className="sec-sub" style={{ color: "var(--muted)" }}>Open to research collaborations, consulting engagements, and academic partnerships.</p>
           </Reveal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
-            {/* Contact info */}
+          <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "start" }}>
             <Reveal dir="left">
               <div>
                 {[
@@ -674,89 +747,32 @@ export default function Portfolio() {
                   { href: "#",                                 icon: "📍", lbl: "Location", val: "109-60400 Chuka, Kenya" },
                   { href: "https://beyonddataanalytics.online",icon: "🌐", lbl: "Website",  val: "beyonddataanalytics.online" },
                 ].map(({ href, icon, lbl, val }) => (
-                  <a
-                    key={lbl}
-                    href={href}
-                    target={href.startsWith("http") ? "_blank" : undefined}
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-4 mb-5 no-underline group"
-                    style={{ textDecoration: "none" }}
-                  >
-                    <div
-                      className="w-10 h-10 flex items-center justify-center text-base shrink-0 transition-all duration-200"
-                      style={{ border: "1px solid rgba(255,255,255,0.12)", borderRadius: "2px" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = C.gold; (e.currentTarget as HTMLDivElement).style.background = "rgba(200,147,58,0.1)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(255,255,255,0.12)"; (e.currentTarget as HTMLDivElement).style.background = ""; }}
-                    >
-                      {icon}
-                    </div>
+                  <a key={lbl} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="c-item">
+                    <div className="c-icon">{icon}</div>
                     <div>
-                      <p
-                        className="text-xs uppercase tracking-widest mb-0.5"
-                        style={{ fontFamily: "'DM Mono', monospace", color: C.muted }}
-                      >
-                        {lbl}
-                      </p>
-                      <p className="text-sm font-medium" style={{ color: "rgba(245,242,236,0.85)" }}>{val}</p>
+                      <p className="c-lbl">{lbl}</p>
+                      <p className="c-val">{val}</p>
                     </div>
                   </a>
                 ))}
-
-                <div className="mt-6">
-                  <p
-                    className="text-xs uppercase tracking-widest mb-3"
-                    style={{ fontFamily: "'DM Mono', monospace", color: C.muted }}
-                  >
-                    Available for
-                  </p>
-                  {["Research collaborations", "Consulting opportunities", "Academic partnerships", "Data analytics projects"].map((item) => (
-                    <p key={item} className="text-sm mb-1.5" style={{ color: "rgba(245,242,236,0.65)" }}>
-                      → {item}
-                    </p>
+                <div style={{ marginTop: "1.5rem" }}>
+                  <p className="c-lbl" style={{ marginBottom: ".75rem" }}>Available for</p>
+                  {["Research collaborations","Consulting opportunities","Academic partnerships","Data analytics projects"].map((item) => (
+                    <p key={item} style={{ fontFamily: "var(--sans)", fontSize: ".85rem", color: "rgba(245,242,236,.65)", marginBottom: ".5rem" }}>→ {item}</p>
                   ))}
                 </div>
               </div>
             </Reveal>
 
-            {/* Form */}
             <Reveal dir="right">
-              <div className="flex flex-col gap-3">
-                {["Your Name", "Your Email", "Subject"].map((ph) => (
-                  <input
-                    key={ph}
-                    type={ph === "Your Email" ? "email" : "text"}
-                    placeholder={ph}
-                    className="w-full px-4 py-3 text-sm outline-none transition-all duration-200"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.1)",
-                      borderRadius: "2px",
-                      color: C.paper,
-                      fontFamily: "'Bricolage Grotesque', sans-serif",
-                    }}
-                    onFocus={e => (e.currentTarget.style.borderColor = C.gold)}
-                    onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
-                  />
+              <div style={{ display: "flex", flexDirection: "column", gap: ".85rem" }}>
+                {["Your Name","Your Email","Subject"].map((ph) => (
+                  <input key={ph} type={ph === "Your Email" ? "email" : "text"} placeholder={ph} className="f-input" />
                 ))}
-                <textarea
-                  placeholder="Your message…"
-                  rows={5}
-                  className="w-full px-4 py-3 text-sm outline-none transition-all duration-200 resize-y"
-                  style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    borderRadius: "2px",
-                    color: C.paper,
-                    fontFamily: "'Bricolage Grotesque', sans-serif",
-                  }}
-                  onFocus={e => (e.currentTarget.style.borderColor = C.gold)}
-                  onBlur={e => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)")}
-                />
+                <textarea placeholder="Your message…" rows={5} className="f-input" style={{ resize: "vertical" }} />
                 <button
-                  className="self-start px-6 py-2.5 text-xs font-semibold tracking-widest uppercase text-white transition-all duration-200"
-                  style={{ background: C.accent, border: "none", cursor: "pointer", borderRadius: "2px" }}
-                  onMouseEnter={e => (e.currentTarget.style.background = C.gold)}
-                  onMouseLeave={e => (e.currentTarget.style.background = C.accent)}
+                  className="btn-primary"
+                  style={{ width: "fit-content" }}
                 >
                   Send Message →
                 </button>
@@ -766,11 +782,8 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── FOOTER ───────────────────────────────────────────────────────────── */}
-      <footer
-        className="text-center py-6 text-xs tracking-widest"
-        style={{ background: "#050508", color: "rgba(245,242,236,0.28)", fontFamily: "'DM Mono', monospace" }}
-      >
+      {/* ── FOOTER ── */}
+      <footer>
         © {new Date().getFullYear()} Victor Lumumba Wandera · All rights reserved · beyonddataanalytics.online
       </footer>
     </div>
