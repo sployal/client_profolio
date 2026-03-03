@@ -371,8 +371,8 @@ function CascadeGrid({ images, cols = 4, aspect = "1/1" }: { images: { src: stri
             }}
           >
             <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.4s ease" }} />
-            <div className="gov" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(247,201,72,0.25) 0%, rgba(5,5,12,0.7) 100%)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: "1.8rem" }}>🔍</span>
+            <div className="gov" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(5,5,12,0.75) 0%, transparent 55%)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "flex-end", padding: ".6rem" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: ".62rem", color: "rgba(245,242,236,0.85)", letterSpacing: ".08em" }}>{img.caption}</span>
             </div>
           </div>
         ))}
@@ -382,54 +382,96 @@ function CascadeGrid({ images, cols = 4, aspect = "1/1" }: { images: { src: stri
   );
 }
 
-/* ─── Lab strip — parallax shimmer reveal ────────────────────────────────────── */
+/* ─── Lab strip — right-to-left auto-scroll marquee ─────────────────────────── */
 function LabStrip({ images, aspect = "4/3" }: { images: { src: string; caption: string }[]; aspect?: string }) {
   const [light, setLight] = useState<{ src: string; caption: string } | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.12 });
-    if (containerRef.current) obs.observe(containerRef.current);
-    return () => obs.disconnect();
-  }, []);
+  const [paused, setPaused] = useState(false);
+  // Duplicate images so the loop is seamless
+  const doubled = [...images, ...images];
   return (
     <>
-      <div ref={containerRef} style={{ display: "grid", gridTemplateColumns: `repeat(${images.length}, 1fr)`, gap: "1rem" }}>
-        {images.map((img, i) => (
-          <div key={i} onClick={() => setLight(img)}
-            style={{
-              position: "relative", borderRadius: "12px", overflow: "hidden",
-              aspectRatio: aspect, cursor: "zoom-in",
-              opacity: visible ? 1 : 0,
-              transform: visible ? "translateY(0) scaleY(1)" : "translateY(60px) scaleY(0.9)",
-              transformOrigin: "bottom center",
-              transition: `opacity 0.6s ease ${i * 150}ms, transform 0.7s cubic-bezier(.16,1,.3,1) ${i * 150}ms`,
-              boxShadow: "0 8px 28px rgba(0,0,0,0.4)",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(-5px) scale(1.03)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 22px 55px rgba(0,0,0,0.55)";
-              (e.currentTarget.querySelector(".lov") as HTMLElement).style.opacity = "1";
-              (e.currentTarget.querySelector(".lshine") as HTMLElement).style.transform = "translateX(200%)";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLDivElement).style.transform = "translateY(0) scale(1)";
-              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.4)";
-              (e.currentTarget.querySelector(".lov") as HTMLElement).style.opacity = "0";
-              (e.currentTarget.querySelector(".lshine") as HTMLElement).style.transform = "translateX(-200%)";
-            }}
-          >
-            <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-            {/* Shine sweep */}
-            <div className="lshine" style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)", transform: "translateX(-200%)", transition: "transform 0.6s ease", pointerEvents: "none" }} />
-            <div className="lov" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(21,46,34,0.9) 0%, transparent 55%)", opacity: 0, transition: "opacity 0.35s", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "1rem" }}>
-              <span style={{ fontFamily: "var(--mono)", fontSize: ".62rem", color: "#a8e6c0", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: ".2rem" }}>Lab Session</span>
-              <span style={{ fontFamily: "var(--sans)", fontSize: ".82rem", color: "rgba(245,242,236,0.9)", fontWeight: 500 }}>{img.caption}</span>
+      <style>{`
+        @keyframes marqueeRTL {
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .lab-track {
+          display: flex;
+          gap: 1.2rem;
+          width: max-content;
+          animation: marqueeRTL 30s linear infinite;
+          will-change: transform;
+        }
+        .lab-track.paused { animation-play-state: paused; }
+        .lab-item {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          flex-shrink: 0;
+          width: 340px;
+          cursor: zoom-in;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+          transition: box-shadow 0.4s ease, transform 0.4s ease;
+        }
+        .lab-item:hover {
+          box-shadow: 0 22px 55px rgba(0,0,0,0.6);
+          transform: translateY(-5px) scale(1.03);
+        }
+        .lab-item img {
+          width: 100%;
+          aspect-ratio: 4/3;
+          object-fit: cover;
+          display: block;
+        }
+        .lab-ov {
+          position: absolute; inset: 0;
+          background: linear-gradient(to top, rgba(21,46,34,0.88) 0%, transparent 55%);
+          opacity: 0; transition: opacity 0.3s;
+          display: flex; flex-direction: column;
+          justify-content: flex-end; padding: .9rem;
+        }
+        .lab-item:hover .lab-ov { opacity: 1; }
+        .lab-shine {
+          position: absolute; inset: 0;
+          background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.16) 50%, transparent 60%);
+          transform: translateX(-200%);
+          transition: transform 0.55s ease;
+          pointer-events: none;
+        }
+        .lab-item:hover .lab-shine { transform: translateX(200%); }
+        .lab-border {
+          position: absolute; inset: 0;
+          border: 2px solid rgba(100,220,140,0.35);
+          border-radius: 12px;
+          opacity: 0; transition: opacity 0.3s;
+          pointer-events: none;
+        }
+        .lab-item:hover .lab-border { opacity: 1; }
+      `}</style>
+      <div
+        style={{
+          overflow: "hidden",
+          borderRadius: "14px",
+          padding: "0.5rem 0",
+          WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)",
+          maskImage: "linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)",
+        }}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div className={`lab-track${paused ? " paused" : ""}`}>
+          {doubled.map((img, i) => (
+            <div key={i} className="lab-item" onClick={() => setLight(img)}>
+              <img src={img.src} alt={img.caption} />
+              <div className="lab-shine" />
+              <div className="lab-ov">
+                <span style={{ fontFamily: "var(--mono)", fontSize: ".62rem", color: "#a8e6c0", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: ".2rem" }}>Lab Session</span>
+                <span style={{ fontFamily: "var(--sans)", fontSize: ".82rem", color: "rgba(245,242,236,0.9)", fontWeight: 500 }}>{img.caption}</span>
+              </div>
+              <div className="lab-border" />
             </div>
-            {/* Entry frame border animation */}
-            <div style={{ position: "absolute", inset: 0, border: "2px solid rgba(100,220,140,0)", borderRadius: "12px", transition: `border-color 0.4s ease ${i * 150 + 600}ms`, borderColor: visible ? "rgba(100,220,140,0.35)" : "rgba(100,220,140,0)", pointerEvents: "none" }} />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
       {light && <Lightbox src={light.src} caption={light.caption} onClose={() => setLight(null)} />}
     </>
