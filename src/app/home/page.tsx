@@ -262,35 +262,172 @@ function Lightbox({ src, caption, onClose }: { src: string; caption: string; onC
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", handler); document.body.style.overflow = ""; };
   }, [onClose]);
   return (
-    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(5,5,12,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", backdropFilter: "blur(10px)", cursor: "zoom-out" }}>
-      <div onClick={e => e.stopPropagation()} style={{ maxWidth: "900px", width: "100%", position: "relative" }}>
-        <img src={src} alt={caption} style={{ width: "100%", borderRadius: "12px", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} />
-        <p style={{ fontFamily: "var(--mono)", fontSize: ".72rem", color: "rgba(245,242,236,0.5)", textAlign: "center", marginTop: ".75rem", letterSpacing: ".1em" }}>{caption}</p>
-        <button onClick={onClose} style={{ position: "absolute", top: "-1rem", right: "-1rem", width: "32px", height: "32px", borderRadius: "50%", background: "var(--gold)", border: "none", color: "#fff", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(5,5,12,0.93)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", backdropFilter: "blur(12px)", cursor: "zoom-out", animation: "lbFadeIn 0.25s ease" }}>
+      <div onClick={e => e.stopPropagation()} style={{ maxWidth: "900px", width: "100%", position: "relative", animation: "lbSlideUp 0.35s cubic-bezier(.16,1,.3,1)" }}>
+        <img src={src} alt={caption} style={{ width: "100%", borderRadius: "14px", boxShadow: "0 40px 100px rgba(0,0,0,0.7)", display: "block" }} />
+        <p style={{ fontFamily: "var(--mono)", fontSize: ".72rem", color: "rgba(245,242,236,0.45)", textAlign: "center", marginTop: ".8rem", letterSpacing: ".12em" }}>{caption} · click anywhere to close · ESC</p>
+        <button onClick={onClose} style={{ position: "absolute", top: "-1rem", right: "-1rem", width: "34px", height: "34px", borderRadius: "50%", background: "var(--gold)", border: "none", color: "#fff", cursor: "pointer", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(200,147,58,0.5)" }}>×</button>
       </div>
     </div>
   );
 }
 
-/* ─── Photo strip ─────────────────────────────────────────────────────────────── */
-function PhotoStrip({ images, cols = 3, aspect = "3/2" }: { images: { src: string; caption: string }[]; cols?: number; aspect?: string }) {
+/* ─── Slide photo strip — left-to-right reveal ────────────────────────────────── */
+function SlideStrip({ images, aspect = "4/3" }: { images: { src: string; caption: string }[]; aspect?: string }) {
   const [light, setLight] = useState<{ src: string; caption: string } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.15 });
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
   return (
     <>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.75rem" }}>
+      <div ref={containerRef} style={{ display: "grid", gridTemplateColumns: `repeat(${images.length}, 1fr)`, gap: "1rem" }}>
         {images.map((img, i) => (
           <div key={i} onClick={() => setLight(img)}
-            style={{ position: "relative", borderRadius: "10px", overflow: "hidden", aspectRatio: aspect, cursor: "zoom-in", background: "rgba(255,255,255,0.05)" }}
-            onMouseEnter={e => { (e.currentTarget.querySelector(".photo-overlay") as HTMLElement).style.opacity = "1"; (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1.05)"; }}
-            onMouseLeave={e => { (e.currentTarget.querySelector(".photo-overlay") as HTMLElement).style.opacity = "0"; (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1)"; }}
+            style={{
+              position: "relative", borderRadius: "12px", overflow: "hidden",
+              aspectRatio: aspect, cursor: "zoom-in",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateX(0) scale(1)" : `translateX(${i % 2 === 0 ? "-80px" : "80px"}) scale(0.95)`,
+              transition: `opacity 0.7s ease ${i * 180}ms, transform 0.7s cubic-bezier(.16,1,.3,1) ${i * 180}ms`,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.35)",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "scale(1.03) translateY(-4px)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 20px 50px rgba(0,0,0,0.5)";
+              (e.currentTarget.querySelector(".sov") as HTMLElement).style.opacity = "1";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "scale(1) translateY(0)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 32px rgba(0,0,0,0.35)";
+              (e.currentTarget.querySelector(".sov") as HTMLElement).style.opacity = "0";
+            }}
+          >
+            <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.5s ease" }}
+              onMouseEnter={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1.06)"}
+              onMouseLeave={e => (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"}
+            />
+            {/* Gold shimmer bar on entry */}
+            <div style={{
+              position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+              background: "linear-gradient(90deg, transparent, #f7c948, transparent)",
+              transform: visible ? "translateX(100%)" : "translateX(-100%)",
+              transition: `transform 0.9s ease ${i * 180 + 400}ms`,
+            }} />
+            <div className="sov" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(5,5,12,0.85) 0%, rgba(5,5,12,0.2) 45%, transparent 70%)", opacity: 0, transition: "opacity 0.35s", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "1rem" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: ".68rem", color: "rgba(247,201,72,0.9)", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: ".2rem" }}>🔍 View</span>
+              <span style={{ fontFamily: "var(--sans)", fontSize: ".8rem", color: "rgba(245,242,236,0.9)", fontWeight: 500 }}>{img.caption}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {light && <Lightbox src={light.src} caption={light.caption} onClose={() => setLight(null)} />}
+    </>
+  );
+}
+
+/* ─── Cascade grid — staggered pop-in with tilt ──────────────────────────────── */
+function CascadeGrid({ images, cols = 4, aspect = "1/1" }: { images: { src: string; caption: string }[]; cols?: number; aspect?: string }) {
+  const [light, setLight] = useState<{ src: string; caption: string } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.1 });
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
+  const tilts = [-2, 1.5, -1, 2, -1.5, 2.5, -2];
+  return (
+    <>
+      <div ref={containerRef} style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.75rem" }}>
+        {images.map((img, i) => (
+          <div key={i} onClick={() => setLight(img)}
+            style={{
+              position: "relative", borderRadius: "10px", overflow: "hidden",
+              aspectRatio: aspect, cursor: "zoom-in",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0) rotate(0deg) scale(1)" : `translateY(40px) rotate(${tilts[i % tilts.length]}deg) scale(0.85)`,
+              transition: `opacity 0.55s ease ${i * 90}ms, transform 0.65s cubic-bezier(.34,1.56,.64,1) ${i * 90}ms`,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "scale(1.06) translateY(-4px) rotate(0deg)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 16px 40px rgba(0,0,0,0.55)";
+              (e.currentTarget as HTMLDivElement).style.zIndex = "10";
+              (e.currentTarget.querySelector(".gov") as HTMLElement).style.opacity = "1";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "scale(1) translateY(0) rotate(0deg)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(0,0,0,0.4)";
+              (e.currentTarget as HTMLDivElement).style.zIndex = "1";
+              (e.currentTarget.querySelector(".gov") as HTMLElement).style.opacity = "0";
+            }}
           >
             <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.4s ease" }} />
-            <div className="photo-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(5,5,12,0.8) 0%, transparent 55%)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "flex-end", padding: ".75rem" }}>
-              <span style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "rgba(245,242,236,0.85)", letterSpacing: ".08em" }}>{img.caption}</span>
+            <div className="gov" style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(247,201,72,0.25) 0%, rgba(5,5,12,0.7) 100%)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: "1.8rem" }}>🔍</span>
             </div>
+          </div>
+        ))}
+      </div>
+      {light && <Lightbox src={light.src} caption={light.caption} onClose={() => setLight(null)} />}
+    </>
+  );
+}
+
+/* ─── Lab strip — parallax shimmer reveal ────────────────────────────────────── */
+function LabStrip({ images, aspect = "4/3" }: { images: { src: string; caption: string }[]; aspect?: string }) {
+  const [light, setLight] = useState<{ src: string; caption: string } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: 0.12 });
+    if (containerRef.current) obs.observe(containerRef.current);
+    return () => obs.disconnect();
+  }, []);
+  return (
+    <>
+      <div ref={containerRef} style={{ display: "grid", gridTemplateColumns: `repeat(${images.length}, 1fr)`, gap: "1rem" }}>
+        {images.map((img, i) => (
+          <div key={i} onClick={() => setLight(img)}
+            style={{
+              position: "relative", borderRadius: "12px", overflow: "hidden",
+              aspectRatio: aspect, cursor: "zoom-in",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0) scaleY(1)" : "translateY(60px) scaleY(0.9)",
+              transformOrigin: "bottom center",
+              transition: `opacity 0.6s ease ${i * 150}ms, transform 0.7s cubic-bezier(.16,1,.3,1) ${i * 150}ms`,
+              boxShadow: "0 8px 28px rgba(0,0,0,0.4)",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "translateY(-5px) scale(1.03)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 22px 55px rgba(0,0,0,0.55)";
+              (e.currentTarget.querySelector(".lov") as HTMLElement).style.opacity = "1";
+              (e.currentTarget.querySelector(".lshine") as HTMLElement).style.transform = "translateX(200%)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLDivElement).style.transform = "translateY(0) scale(1)";
+              (e.currentTarget as HTMLDivElement).style.boxShadow = "0 8px 28px rgba(0,0,0,0.4)";
+              (e.currentTarget.querySelector(".lov") as HTMLElement).style.opacity = "0";
+              (e.currentTarget.querySelector(".lshine") as HTMLElement).style.transform = "translateX(-200%)";
+            }}
+          >
+            <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            {/* Shine sweep */}
+            <div className="lshine" style={{ position: "absolute", inset: 0, background: "linear-gradient(105deg, transparent 40%, rgba(255,255,255,0.18) 50%, transparent 60%)", transform: "translateX(-200%)", transition: "transform 0.6s ease", pointerEvents: "none" }} />
+            <div className="lov" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(21,46,34,0.9) 0%, transparent 55%)", opacity: 0, transition: "opacity 0.35s", display: "flex", flexDirection: "column", justifyContent: "flex-end", padding: "1rem" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: ".62rem", color: "#a8e6c0", letterSpacing: ".12em", textTransform: "uppercase", marginBottom: ".2rem" }}>Lab Session</span>
+              <span style={{ fontFamily: "var(--sans)", fontSize: ".82rem", color: "rgba(245,242,236,0.9)", fontWeight: 500 }}>{img.caption}</span>
+            </div>
+            {/* Entry frame border animation */}
+            <div style={{ position: "absolute", inset: 0, border: "2px solid rgba(100,220,140,0)", borderRadius: "12px", transition: `border-color 0.4s ease ${i * 150 + 600}ms`, borderColor: visible ? "rgba(100,220,140,0.35)" : "rgba(100,220,140,0)", pointerEvents: "none" }} />
           </div>
         ))}
       </div>
@@ -562,6 +699,9 @@ export default function Portfolio() {
         .memb-row { display: flex; flex-wrap: wrap; gap: .65rem; }
         .memb-tag { font-family: var(--sans); font-size: .78rem; padding: .4rem 1.1rem; border-radius: 99px; border: 1px solid rgba(247,201,72,0.3); background: rgba(247,201,72,0.08); color: #f7c948; font-weight: 500; }
 
+        @keyframes lbFadeIn  { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes lbSlideUp { from { opacity: 0; transform: translateY(40px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
         footer { text-align: center; padding: 1.5rem; background: #050508; color: rgba(245,242,236,.25); font-family: var(--mono); font-size: .7rem; letter-spacing: .08em; }
 
         @media (max-width: 900px) {
@@ -776,7 +916,7 @@ export default function Portfolio() {
           <Reveal delay={80}>
             <div style={{ marginTop: "2.5rem" }}>
               <p style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "#f7c948", letterSpacing: ".2em", textTransform: "uppercase", marginBottom: "1rem", textAlign: "center" }}>On Stage</p>
-              <PhotoStrip images={STAGE_IMGS} cols={2} aspect="4/3" />
+              <SlideStrip images={STAGE_IMGS} aspect="4/3" />
             </div>
           </Reveal>
 
@@ -784,7 +924,7 @@ export default function Portfolio() {
           <Reveal delay={100}>
             <div style={{ marginTop: "2.5rem" }}>
               <p style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "#f7c948", letterSpacing: ".2em", textTransform: "uppercase", marginBottom: "1rem", textAlign: "center" }}>With the CDAM Team · Centre for Data Analytics &amp; Modelling</p>
-              <PhotoStrip images={CDAM_IMGS} cols={4} aspect="1/1" />
+              <CascadeGrid images={CDAM_IMGS} cols={4} aspect="1/1" />
             </div>
           </Reveal>
         </div>
@@ -866,7 +1006,7 @@ export default function Portfolio() {
           <Reveal delay={80}>
             <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1rem", fontSize: "1.6rem", fontWeight: 300, color: "#ece8ff" }}>Training <em>in Action</em></h3>
             <p style={{ fontFamily: "var(--sans)", fontSize: ".82rem", color: "rgba(200,195,240,0.5)", textAlign: "center", marginBottom: "1.25rem" }}>Hands-on statistical computing and data science workshops</p>
-            <PhotoStrip images={LAB_IMGS} cols={3} aspect="4/3" />
+            <LabStrip images={LAB_IMGS} aspect="4/3" />
           </Reveal>
 
           <Reveal delay={80}>
