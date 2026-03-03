@@ -587,7 +587,13 @@ export default function Portfolio() {
           <Reveal><p className="sec-label">About Me</p></Reveal>
           <div className="about-grid" style={{ marginTop: "1rem" }}>
             <Reveal dir="left">
-              <div className="about-photo">👨🏾‍💼</div>
+              <div className="about-photo">
+                <img 
+                  src="https://res.cloudinary.com/dacpiss4b/image/upload/v1772514964/main_image_wjyuuq.jpg"
+                  alt="Victor Lumumba Wandera"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
             </Reveal>
             <Reveal dir="right">
               <div className="about-text">
