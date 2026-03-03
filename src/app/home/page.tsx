@@ -55,7 +55,7 @@ const MEMBERSHIPS = [
 ];
 
 /* ─── Typewriter hook ─────────────────────────────────────────────────────────── */
-function useTypewriter(words: string[]) {
+function useTypewriter(words) {
   const [display, setDisplay] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
@@ -69,7 +69,7 @@ function useTypewriter(words: string[]) {
 
   useEffect(() => {
     const word = words[wordIdx];
-    let timeout: ReturnType<typeof setTimeout>;
+    let timeout;
 
     if (!deleting && charIdx <= word.length) {
       timeout = setTimeout(() => {
@@ -97,7 +97,7 @@ function useTypewriter(words: string[]) {
 
 /* ─── Reveal hook ─────────────────────────────────────────────────────────────── */
 function useReveal(threshold = 0.12) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -110,9 +110,7 @@ function useReveal(threshold = 0.12) {
   return { ref, visible };
 }
 
-function Reveal({ children, delay = 0, dir = "up" }: {
-  children: ReactNode; delay?: number; dir?: "up" | "left" | "right";
-}) {
+function Reveal({ children, delay = 0, dir = "up" }) {
   const { ref, visible } = useReveal();
   const translate = dir === "left" ? "translateX(-28px)" : dir === "right" ? "translateX(28px)" : "translateY(28px)";
   return (
@@ -127,18 +125,18 @@ function Reveal({ children, delay = 0, dir = "up" }: {
 }
 
 /* ─── Skill bar ───────────────────────────────────────────────────────────────── */
-function SkillBar({ name, level }: { name: string; level: number }) {
+function SkillBar({ name, level }) {
   const { ref, visible } = useReveal(0.2);
   return (
     <div ref={ref} style={{ marginBottom: "1.1rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: ".4rem" }}>
-        <span style={{ fontFamily: "var(--sans)", fontSize: ".88rem", fontWeight: 500, color: "var(--ink)" }}>{name}</span>
-        <span style={{ fontFamily: "var(--mono)", fontSize: ".75rem", color: "var(--muted)" }}>{level}%</span>
+        <span style={{ fontFamily: "var(--sans)", fontSize: ".88rem", fontWeight: 500, color: "var(--skills-text)" }}>{name}</span>
+        <span style={{ fontFamily: "var(--mono)", fontSize: ".75rem", color: "var(--skills-muted)" }}>{level}%</span>
       </div>
-      <div style={{ height: "3px", background: "var(--border)", borderRadius: "2px" }}>
+      <div style={{ height: "3px", background: "rgba(255,255,255,0.2)", borderRadius: "2px" }}>
         <div style={{
           height: "100%", borderRadius: "2px",
-          background: "linear-gradient(90deg, var(--accent), var(--gold))",
+          background: "linear-gradient(90deg, #f7c948, #ff8c42)",
           width: visible ? `${level}%` : "0%",
           transition: "width 1.1s cubic-bezier(.4,0,.2,1) 150ms",
         }} />
@@ -148,7 +146,7 @@ function SkillBar({ name, level }: { name: string; level: number }) {
 }
 
 /* ─── Scroll spy ──────────────────────────────────────────────────────────────── */
-function useScrollSpy(ids: string[]) {
+function useScrollSpy(ids) {
   const [active, setActive] = useState(ids[0]);
   useEffect(() => {
     const handler = () => {
@@ -172,7 +170,7 @@ export default function Portfolio() {
   const active = useScrollSpy(NAV);
   const { display, showCursor } = useTypewriter(ROLES);
 
-  const scrollTo = (s: string) => {
+  const scrollTo = (s) => {
     document.getElementById(s.toLowerCase())?.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
   };
@@ -196,13 +194,6 @@ export default function Portfolio() {
           --mono:   'DM Mono', monospace;
           --serif:  'Cormorant Garamond', Georgia, serif;
           --sans:   'Bricolage Grotesque', sans-serif;
-
-          /* ── Aesthetic section backgrounds ── */
-          --bg-hero:        linear-gradient(145deg, #faf8f4 0%, #eef4fb 50%, #f4f0fa 100%);
-          --bg-about:       linear-gradient(160deg, #edf4fb 0%, #f0ebf7 60%, #fdf4ed 100%);
-          --bg-education:   linear-gradient(150deg, #f8f5ff 0%, #fffbf0 60%, #f0f8ff 100%);
-          --bg-skills:      linear-gradient(155deg, #f0faf4 0%, #f5f0ff 50%, #fff8f0 100%);
-          --bg-pubs:        linear-gradient(145deg, #fefcf8 0%, #f0f6ff 50%, #fdf8fe 100%);
         }
 
         body { background: #f7f5f0; }
@@ -232,35 +223,40 @@ export default function Portfolio() {
         .hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; }
         .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink); }
 
-        /* ── HERO ── */
+        /* ══════════════════════════════════════════════
+           SECTION BACKGROUNDS — each one bold & distinct
+        ══════════════════════════════════════════════ */
+
+        /* HERO — deep navy with star-field feel */
         #hero {
           min-height: 100vh; display: flex; flex-direction: column;
           align-items: center; justify-content: center; text-align: center;
           padding: 8rem 1.5rem 5rem;
-          background: var(--bg-hero);
+          background: linear-gradient(135deg, #0d1b2a 0%, #1a3a5c 45%, #0f2744 100%);
           position: relative; overflow: hidden;
         }
-        /* Soft decorative blobs */
         #hero::before {
           content: ''; position: absolute;
-          width: 520px; height: 520px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(167,197,235,0.22) 0%, transparent 70%);
-          top: -80px; right: -100px; pointer-events: none;
+          width: 600px; height: 600px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(200,147,58,0.18) 0%, transparent 65%);
+          top: -120px; right: -150px; pointer-events: none;
         }
         #hero::after {
           content: ''; position: absolute;
-          width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(200,147,58,0.1) 0%, transparent 70%);
-          bottom: -60px; left: -80px; pointer-events: none;
+          width: 450px; height: 450px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(100,170,240,0.12) 0%, transparent 65%);
+          bottom: -80px; left: -100px; pointer-events: none;
         }
+
+        /* Override hero text colors for dark bg */
+        #hero .hero-name { color: #f5f2ec; }
+        #hero .hero-bio  { color: rgba(220,215,205,0.75); }
 
         .hero-name {
           font-family: var(--serif); font-size: clamp(2.8rem, 6vw, 4.2rem);
-          font-weight: 600; color: var(--ink); letter-spacing: -.01em; margin-bottom: .6rem;
+          font-weight: 600; letter-spacing: -.01em; margin-bottom: .6rem;
           position: relative; z-index: 1;
         }
-
-        /* ── TYPEWRITER ROLE ── */
         .hero-role-wrap {
           display: inline-flex; align-items: center; gap: 0;
           margin-bottom: 1.6rem; position: relative; z-index: 1;
@@ -270,8 +266,7 @@ export default function Portfolio() {
           font-size: clamp(1.2rem, 2.8vw, 1.75rem);
           font-style: italic;
           font-weight: 300;
-          /* Vibrant teal-to-violet gradient */
-          background: linear-gradient(100deg, #0e7fa8 0%, #7c3aed 60%, #c8933a 100%);
+          background: linear-gradient(100deg, #64c8f0 0%, #f7c948 60%, #ff8c42 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
           background-clip: text;
@@ -281,14 +276,13 @@ export default function Portfolio() {
         }
         .hero-cursor {
           display: inline-block; width: 2px; height: 1.4em;
-          background: linear-gradient(180deg, #0e7fa8, #7c3aed);
+          background: linear-gradient(180deg, #64c8f0, #f7c948);
           border-radius: 1px; margin-left: 3px; vertical-align: middle;
           transition: opacity .1s;
         }
-
         .hero-bio {
           font-family: var(--sans); max-width: 560px; margin: 0 auto 2rem;
-          font-size: .93rem; color: var(--muted); line-height: 1.8;
+          font-size: .93rem; line-height: 1.8;
           position: relative; z-index: 1;
         }
         .hero-btns {
@@ -297,33 +291,156 @@ export default function Portfolio() {
         }
         .btn-primary {
           font-family: var(--sans); padding: .7rem 1.7rem;
-          background: var(--accent); color: #fff;
+          background: var(--gold); color: #fff;
           border: none; cursor: pointer; font-size: .8rem; font-weight: 600;
           letter-spacing: .06em; transition: background .2s, transform .15s; border-radius: 3px;
         }
-        .btn-primary:hover { background: var(--gold); transform: translateY(-1px); }
+        .btn-primary:hover { background: #e0a540; transform: translateY(-1px); }
         .btn-outline {
           font-family: var(--sans); padding: .7rem 1.7rem;
-          background: transparent; color: var(--accent);
-          border: 1.5px solid var(--accent); cursor: pointer;
+          background: transparent; color: #f5f2ec;
+          border: 1.5px solid rgba(245,242,236,0.4); cursor: pointer;
           font-size: .8rem; font-weight: 600; letter-spacing: .06em;
           transition: background .2s, color .2s, transform .15s; border-radius: 3px;
         }
-        .btn-outline:hover { background: var(--accent); color: #fff; transform: translateY(-1px); }
+        .btn-outline:hover { background: rgba(245,242,236,0.1); transform: translateY(-1px); }
         .social-row { display: flex; gap: 1.1rem; justify-content: center; position: relative; z-index: 1; }
         .social-icon {
           width: 38px; height: 38px; border-radius: 50%;
-          border: 1.5px solid var(--border);
+          border: 1.5px solid rgba(245,242,236,0.2);
           display: flex; align-items: center; justify-content: center;
-          font-size: 1rem; text-decoration: none; color: var(--ink);
+          font-size: 1rem; text-decoration: none; color: rgba(245,242,236,0.8);
           transition: border-color .2s, color .2s, transform .15s;
-          background: rgba(255,255,255,0.6);
+          background: rgba(255,255,255,0.06);
         }
         .social-icon:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
 
+        /* ABOUT — warm cream/sand */
+        #about {
+          padding: 5.5rem 1.5rem;
+          background: linear-gradient(160deg, #fdf6e3 0%, #faebd7 50%, #fdf3e0 100%);
+          position: relative; overflow: hidden;
+        }
+        #about::before {
+          content: ''; position: absolute; pointer-events: none;
+          width: 400px; height: 400px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(200,147,58,0.12) 0%, transparent 70%);
+          top: -50px; right: 8%;
+        }
+
+        /* EDUCATION — cool slate blue */
+        #education {
+          padding: 5.5rem 1.5rem;
+          background: linear-gradient(150deg, #1e3a52 0%, #243b55 40%, #1a2f45 100%);
+          position: relative; overflow: hidden;
+        }
+        #education::after {
+          content: ''; position: absolute; pointer-events: none;
+          width: 350px; height: 350px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(100,200,240,0.1) 0%, transparent 70%);
+          bottom: 5%; left: 5%;
+        }
+        /* Education text overrides for dark bg */
+        #education .sec-label { color: #f7c948; }
+        #education .sec-title { color: #e8f4fd; }
+        #education .sec-sub   { color: rgba(200,220,240,0.65); }
+        #education .edu-degree { color: #64c8f0; }
+        #education .edu-school { color: rgba(200,220,240,0.7); }
+        #education .edu-year   { color: #f7c948; }
+        #education .edu-desc   { color: rgba(200,220,240,0.65); }
+        #education .edu-card {
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(100,200,240,0.2);
+        }
+        #education .edu-card:hover { box-shadow: 0 10px 36px rgba(0,0,0,0.3); }
+        #education .edu-icon {
+          background: linear-gradient(135deg, rgba(100,200,240,0.2), rgba(124,58,237,0.2));
+        }
+        #education .mission-box {
+          background: rgba(255,255,255,0.05);
+          border-left: 3px solid #f7c948;
+        }
+        #education .mission-box p { color: rgba(200,220,240,0.8); }
+        #education .mission-box strong { color: #f5f2ec; }
+        #education .tag {
+          background: rgba(255,255,255,0.07);
+          border-color: rgba(100,200,240,0.3);
+          color: #a8d8f0;
+        }
+        #education .sec-label[style*="text-align: left"] { color: #f7c948; }
+
+        /* SKILLS — rich forest green */
+        #skills {
+          padding: 5.5rem 1.5rem;
+          background: linear-gradient(155deg, #1a3a2a 0%, #1e4530 45%, #152e22 100%);
+          position: relative; overflow: hidden;
+          --skills-text: #e8f5e9;
+          --skills-muted: rgba(200,240,210,0.55);
+        }
+        #skills::before {
+          content: ''; position: absolute; pointer-events: none;
+          width: 450px; height: 450px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(100,220,140,0.1) 0%, transparent 70%);
+          top: 10%; right: -5%;
+        }
+        #skills .sec-label { color: #f7c948; }
+        #skills .sec-title { color: #e8f5e9; }
+        #skills .sec-sub   { color: rgba(200,240,210,0.6); }
+        #skills .skills-group h4 { color: #f7c948; border-bottom-color: rgba(200,240,210,0.15); }
+        #skills .int-card {
+          background: rgba(255,255,255,0.07);
+          border-color: rgba(100,220,140,0.18);
+        }
+        #skills .int-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.3); }
+        #skills .int-title { color: #a8e6c0; }
+        #skills .int-desc  { color: rgba(200,240,210,0.6); }
+        #skills h3 { color: #e8f5e9 !important; }
+
+        /* PUBLICATIONS — rich burgundy/wine */
+        #publications {
+          padding: 5.5rem 1.5rem;
+          background: linear-gradient(145deg, #2d1b2e 0%, #3a1f3c 45%, #251525 100%);
+          position: relative; overflow: hidden;
+        }
+        #publications::after {
+          content: ''; position: absolute; pointer-events: none;
+          width: 380px; height: 380px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(200,100,220,0.1) 0%, transparent 70%);
+          bottom: 0; right: 5%;
+        }
+        #publications .sec-label { color: #f7c948; }
+        #publications .sec-title { color: #f5e8ff; }
+        #publications .sec-sub   { color: rgba(220,190,240,0.6); }
+        #publications .pub-item  { border-bottom-color: rgba(200,150,220,0.2); }
+        #publications .pub-year  { color: #f7c948; }
+        #publications .pub-title { color: #e8d0ff; }
+        #publications .pub-journal { color: rgba(200,170,230,0.65); }
+
+        /* CONTACT — deep charcoal (kept original) */
+        #contact { padding: 5.5rem 1.5rem; background: var(--ink); }
+        .c-item {
+          display: flex; gap: 1rem; align-items: center;
+          margin-bottom: 1.2rem; text-decoration: none;
+        }
+        .c-icon {
+          width: 40px; height: 40px;
+          border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 1rem; flex-shrink: 0; transition: border-color .2s, background .2s;
+        }
+        .c-item:hover .c-icon { border-color: var(--gold); background: rgba(200,147,58,0.1); }
+        .c-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .1rem; }
+        .c-val { font-family: var(--sans); font-size: .85rem; color: rgba(245,242,236,.85); font-weight: 500; }
+        .f-input {
+          background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+          border-radius: 4px; padding: .8rem 1rem;
+          color: #f5f2ec; font-family: var(--sans); font-size: .87rem;
+          outline: none; transition: border-color .2s; width: 100%;
+        }
+        .f-input::placeholder { color: rgba(245,242,236,.25); }
+        .f-input:focus { border-color: var(--gold); }
+
         /* ── SECTION SHARED ── */
-        .sec { padding: 5.5rem 1.5rem; }
-        .sec-inner { max-width: 1060px; margin: 0 auto; }
         .sec-label {
           text-align: center; font-family: var(--mono);
           font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
@@ -340,18 +457,8 @@ export default function Portfolio() {
           margin: 0 auto 3rem; font-size: .9rem; color: var(--muted); line-height: 1.75;
         }
 
-        /* ── ABOUT ── */
-        #about {
-          padding: 5.5rem 1.5rem;
-          background: var(--bg-about);
-          position: relative; overflow: hidden;
-        }
-        #about::before {
-          content: ''; position: absolute; pointer-events: none;
-          width: 350px; height: 350px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(124,58,237,0.07) 0%, transparent 70%);
-          top: 0; right: 10%;
-        }
+        /* ── ABOUT LAYOUT ── */
+        .sec-inner { max-width: 1060px; margin: 0 auto; }
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem; align-items: center; }
         .about-photo {
           width: 100%; border-radius: 18px; min-height: 460px;
@@ -379,18 +486,7 @@ export default function Portfolio() {
         .stat-num { font-family: var(--serif); font-size: 2.2rem; font-weight: 600; color: var(--accent); line-height: 1; }
         .stat-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); margin-top: .3rem; letter-spacing: .1em; text-transform: uppercase; }
 
-        /* ── EDUCATION ── */
-        #education {
-          padding: 5.5rem 1.5rem;
-          background: var(--bg-education);
-          position: relative; overflow: hidden;
-        }
-        #education::after {
-          content: ''; position: absolute; pointer-events: none;
-          width: 300px; height: 300px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(14,127,168,0.07) 0%, transparent 70%);
-          bottom: 5%; left: 5%;
-        }
+        /* ── EDUCATION LAYOUT ── */
         .edu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .edu-card {
           border: 1px solid rgba(200,147,58,0.15); padding: 1.75rem;
@@ -424,18 +520,7 @@ export default function Portfolio() {
           font-size: .75rem; color: var(--accent); font-weight: 500;
         }
 
-        /* ── SKILLS ── */
-        #skills {
-          padding: 5.5rem 1.5rem;
-          background: var(--bg-skills);
-          position: relative; overflow: hidden;
-        }
-        #skills::before {
-          content: ''; position: absolute; pointer-events: none;
-          width: 400px; height: 400px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(200,147,58,0.08) 0%, transparent 70%);
-          top: 10%; right: -5%;
-        }
+        /* ── SKILLS LAYOUT ── */
         .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
         .skills-group h4 {
           font-family: var(--mono); font-size: .72rem; font-weight: 500;
@@ -454,18 +539,7 @@ export default function Portfolio() {
         .int-title { font-family: var(--serif); font-size: .98rem; font-weight: 600; color: var(--accent); margin-bottom: .3rem; }
         .int-desc { font-family: var(--sans); font-size: .75rem; color: var(--muted); line-height: 1.55; }
 
-        /* ── PUBLICATIONS ── */
-        #publications {
-          padding: 5.5rem 1.5rem;
-          background: var(--bg-pubs);
-          position: relative; overflow: hidden;
-        }
-        #publications::after {
-          content: ''; position: absolute; pointer-events: none;
-          width: 350px; height: 350px; border-radius: 50%;
-          background: radial-gradient(circle, rgba(124,58,237,0.06) 0%, transparent 70%);
-          bottom: 0; right: 5%;
-        }
+        /* ── PUBLICATIONS LAYOUT ── */
         .pub-item {
           display: flex; gap: 1.25rem; align-items: flex-start;
           padding: 1.35rem 0; border-bottom: 1px solid rgba(212,207,196,0.6);
@@ -473,30 +547,6 @@ export default function Portfolio() {
         .pub-year { font-family: var(--mono); min-width: 48px; font-size: .72rem; font-weight: 500; color: var(--gold); padding-top: .2rem; flex-shrink: 0; }
         .pub-title { font-family: var(--serif); font-size: 1rem; font-weight: 400; color: var(--accent); margin-bottom: .25rem; line-height: 1.45; }
         .pub-journal { font-family: var(--sans); font-size: .78rem; color: var(--muted); font-style: italic; }
-
-        /* ── CONTACT ── */
-        #contact { padding: 5.5rem 1.5rem; background: var(--ink); }
-        .c-item {
-          display: flex; gap: 1rem; align-items: center;
-          margin-bottom: 1.2rem; text-decoration: none;
-        }
-        .c-icon {
-          width: 40px; height: 40px;
-          border: 1px solid rgba(255,255,255,.12); border-radius: 8px;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 1rem; flex-shrink: 0; transition: border-color .2s, background .2s;
-        }
-        .c-item:hover .c-icon { border-color: var(--gold); background: rgba(200,147,58,0.1); }
-        .c-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .1rem; }
-        .c-val { font-family: var(--sans); font-size: .85rem; color: rgba(245,242,236,.85); font-weight: 500; }
-        .f-input {
-          background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
-          border-radius: 4px; padding: .8rem 1rem;
-          color: #f5f2ec; font-family: var(--sans); font-size: .87rem;
-          outline: none; transition: border-color .2s; width: 100%;
-        }
-        .f-input::placeholder { color: rgba(245,242,236,.25); }
-        .f-input:focus { border-color: var(--gold); }
 
         /* ── FOOTER ── */
         footer {
@@ -517,7 +567,7 @@ export default function Portfolio() {
             padding: 1.25rem 1.5rem; gap: 1rem; z-index: 199;
           }
           .hamburger { display: flex; }
-          .sec, #about, #education, #skills, #publications, #contact { padding: 4rem 1.25rem; }
+          #about, #education, #skills, #publications, #contact { padding: 4rem 1.25rem; }
           .about-grid, .edu-grid, .skills-grid { grid-template-columns: 1fr; gap: 2rem; }
           .contact-grid { grid-template-columns: 1fr; gap: 2rem; }
           .interests-grid { grid-template-columns: 1fr 1fr; }
@@ -550,15 +600,12 @@ export default function Portfolio() {
         <Reveal>
           <h1 className="hero-name">Victor Lumumba Wandera</h1>
         </Reveal>
-
-        {/* Typewriter role */}
         <Reveal delay={100}>
           <div className="hero-role-wrap">
             <span className="hero-role-text">{display}</span>
             <span className="hero-cursor" style={{ opacity: showCursor ? 1 : 0 }} />
           </div>
         </Reveal>
-
         <Reveal delay={220}>
           <p className="hero-bio">
             Welcome to my portfolio. I'm a dedicated statistician and data analyst at Chuka
@@ -582,7 +629,7 @@ export default function Portfolio() {
       </section>
 
       {/* ── ABOUT ── */}
-      <section id="about" className="sec">
+      <section id="about">
         <div className="sec-inner">
           <Reveal><p className="sec-label">About Me</p></Reveal>
           <div className="about-grid" style={{ marginTop: "1rem" }}>
@@ -629,7 +676,7 @@ export default function Portfolio() {
       </section>
 
       {/* ── EDUCATION ── */}
-      <section id="education" className="sec">
+      <section id="education">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Educational Background</p></Reveal>
           <Reveal delay={80}><h2 className="sec-title">Academic <em>Journey</em></h2></Reveal>
@@ -673,7 +720,7 @@ export default function Portfolio() {
       </section>
 
       {/* ── SKILLS ── */}
-      <section id="skills" className="sec">
+      <section id="skills">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Skills</p></Reveal>
           <Reveal delay={80}><h2 className="sec-title">Technical <em>Proficiency</em></h2></Reveal>
@@ -681,17 +728,17 @@ export default function Portfolio() {
 
           <div className="skills-grid">
             <div>
-              <h4>Statistical Software</h4>
+              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase", color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Statistical Software</h4>
               {SKILLS_STAT.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
             <div>
-              <h4>Analytics & Machine Learning</h4>
+              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase", color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Analytics & Machine Learning</h4>
               {SKILLS_ML.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
           </div>
 
           <Reveal delay={80}>
-            <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1.5rem", fontSize: "1.6rem", fontWeight: 300, color: "var(--accent)" }}>
+            <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1.5rem", fontSize: "1.6rem", fontWeight: 300, color: "#e8f5e9" }}>
               What Excites Me About Data Science
             </h3>
           </Reveal>
@@ -710,7 +757,7 @@ export default function Portfolio() {
       </section>
 
       {/* ── PUBLICATIONS ── */}
-      <section id="publications" className="sec">
+      <section id="publications">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Research</p></Reveal>
           <Reveal delay={80}><h2 className="sec-title">Publications</h2></Reveal>
@@ -732,7 +779,7 @@ export default function Portfolio() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section id="contact" className="sec">
+      <section id="contact">
         <div className="sec-inner">
           <Reveal>
             <p className="sec-label" style={{ color: "var(--gold)" }}>Contact</p>
@@ -776,10 +823,7 @@ export default function Portfolio() {
                   <input key={ph} type={ph === "Your Email" ? "email" : "text"} placeholder={ph} className="f-input" />
                 ))}
                 <textarea placeholder="Your message…" rows={5} className="f-input" style={{ resize: "vertical" }} />
-                <button
-                  className="btn-primary"
-                  style={{ width: "fit-content" }}
-                >
+                <button className="btn-primary" style={{ width: "fit-content" }}>
                   Send Message →
                 </button>
               </div>
