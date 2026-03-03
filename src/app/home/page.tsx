@@ -55,7 +55,8 @@ const MEMBERSHIPS = [
 ];
 
 /* ─── Typewriter hook ─────────────────────────────────────────────────────────── */
-function useTypewriter(words) {
+// FIX 7006: Added string[] type annotation to words parameter
+function useTypewriter(words: string[]) {
   const [display, setDisplay] = useState("");
   const [wordIdx, setWordIdx] = useState(0);
   const [charIdx, setCharIdx] = useState(0);
@@ -69,7 +70,8 @@ function useTypewriter(words) {
 
   useEffect(() => {
     const word = words[wordIdx];
-    let timeout;
+    // FIX 7034 + 7005: Typed timeout explicitly so TS can infer it in clearTimeout
+    let timeout: ReturnType<typeof setTimeout>;
 
     if (!deleting && charIdx <= word.length) {
       timeout = setTimeout(() => {
@@ -97,7 +99,7 @@ function useTypewriter(words) {
 
 /* ─── Reveal hook ─────────────────────────────────────────────────────────────── */
 function useReveal(threshold = 0.12) {
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const obs = new IntersectionObserver(
@@ -110,7 +112,12 @@ function useReveal(threshold = 0.12) {
   return { ref, visible };
 }
 
-function Reveal({ children, delay = 0, dir = "up" }) {
+// FIX 7031: Added explicit typed props interface to Reveal
+function Reveal({ children, delay = 0, dir = "up" }: {
+  children: ReactNode;
+  delay?: number;
+  dir?: "up" | "left" | "right";
+}) {
   const { ref, visible } = useReveal();
   const translate = dir === "left" ? "translateX(-28px)" : dir === "right" ? "translateX(28px)" : "translateY(28px)";
   return (
@@ -125,7 +132,8 @@ function Reveal({ children, delay = 0, dir = "up" }) {
 }
 
 /* ─── Skill bar ───────────────────────────────────────────────────────────────── */
-function SkillBar({ name, level }) {
+// FIX 7031: Added explicit typed props to SkillBar
+function SkillBar({ name, level }: { name: string; level: number }) {
   const { ref, visible } = useReveal(0.2);
   return (
     <div ref={ref} style={{ marginBottom: "1.1rem" }}>
@@ -146,7 +154,8 @@ function SkillBar({ name, level }) {
 }
 
 /* ─── Scroll spy ──────────────────────────────────────────────────────────────── */
-function useScrollSpy(ids) {
+// FIX 7006: Added string[] type annotation to ids parameter
+function useScrollSpy(ids: string[]) {
   const [active, setActive] = useState(ids[0]);
   useEffect(() => {
     const handler = () => {
@@ -170,7 +179,8 @@ export default function Portfolio() {
   const active = useScrollSpy(NAV);
   const { display, showCursor } = useTypewriter(ROLES);
 
-  const scrollTo = (s) => {
+  // FIX 7006: Added string type annotation to s parameter
+  const scrollTo = (s: string) => {
     document.getElementById(s.toLowerCase())?.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
   };
@@ -198,7 +208,6 @@ export default function Portfolio() {
 
         body { background: #f7f5f0; }
 
-        /* ── NAV ── */
         nav {
           position: fixed; top: 0; left: 0; right: 0; z-index: 200;
           display: flex; align-items: center; justify-content: space-between;
@@ -223,11 +232,7 @@ export default function Portfolio() {
         .hamburger { display: none; background: none; border: none; cursor: pointer; flex-direction: column; gap: 5px; }
         .hamburger span { display: block; width: 22px; height: 2px; background: var(--ink); }
 
-        /* ══════════════════════════════════════════════
-           SECTION BACKGROUNDS — each one bold & distinct
-        ══════════════════════════════════════════════ */
-
-        /* HERO — deep navy with star-field feel */
+        /* HERO — deep navy */
         #hero {
           min-height: 100vh; display: flex; flex-direction: column;
           align-items: center; justify-content: center; text-align: center;
@@ -247,8 +252,6 @@ export default function Portfolio() {
           background: radial-gradient(circle, rgba(100,170,240,0.12) 0%, transparent 65%);
           bottom: -80px; left: -100px; pointer-events: none;
         }
-
-        /* Override hero text colors for dark bg */
         #hero .hero-name { color: #f5f2ec; }
         #hero .hero-bio  { color: rgba(220,215,205,0.75); }
 
@@ -262,17 +265,12 @@ export default function Portfolio() {
           margin-bottom: 1.6rem; position: relative; z-index: 1;
         }
         .hero-role-text {
-          font-family: var(--serif);
-          font-size: clamp(1.2rem, 2.8vw, 1.75rem);
-          font-style: italic;
-          font-weight: 300;
+          font-family: var(--serif); font-size: clamp(1.2rem, 2.8vw, 1.75rem);
+          font-style: italic; font-weight: 300;
           background: linear-gradient(100deg, #64c8f0 0%, #f7c948 60%, #ff8c42 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-          letter-spacing: .01em;
-          min-height: 2.2rem;
-          line-height: 1.3;
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          background-clip: text; letter-spacing: .01em;
+          min-height: 2.2rem; line-height: 1.3;
         }
         .hero-cursor {
           display: inline-block; width: 2px; height: 1.4em;
@@ -282,8 +280,7 @@ export default function Portfolio() {
         }
         .hero-bio {
           font-family: var(--sans); max-width: 560px; margin: 0 auto 2rem;
-          font-size: .93rem; line-height: 1.8;
-          position: relative; z-index: 1;
+          font-size: .93rem; line-height: 1.8; position: relative; z-index: 1;
         }
         .hero-btns {
           display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
@@ -328,7 +325,7 @@ export default function Portfolio() {
           top: -50px; right: 8%;
         }
 
-        /* EDUCATION — cool slate blue */
+        /* EDUCATION — cool slate blue (dark) */
         #education {
           padding: 5.5rem 1.5rem;
           background: linear-gradient(150deg, #1e3a52 0%, #243b55 40%, #1a2f45 100%);
@@ -340,7 +337,6 @@ export default function Portfolio() {
           background: radial-gradient(circle, rgba(100,200,240,0.1) 0%, transparent 70%);
           bottom: 5%; left: 5%;
         }
-        /* Education text overrides for dark bg */
         #education .sec-label { color: #f7c948; }
         #education .sec-title { color: #e8f4fd; }
         #education .sec-sub   { color: rgba(200,220,240,0.65); }
@@ -367,9 +363,8 @@ export default function Portfolio() {
           border-color: rgba(100,200,240,0.3);
           color: #a8d8f0;
         }
-        #education .sec-label[style*="text-align: left"] { color: #f7c948; }
 
-        /* SKILLS — rich forest green */
+        /* SKILLS — rich forest green (dark) */
         #skills {
           padding: 5.5rem 1.5rem;
           background: linear-gradient(155deg, #1a3a2a 0%, #1e4530 45%, #152e22 100%);
@@ -386,7 +381,6 @@ export default function Portfolio() {
         #skills .sec-label { color: #f7c948; }
         #skills .sec-title { color: #e8f5e9; }
         #skills .sec-sub   { color: rgba(200,240,210,0.6); }
-        #skills .skills-group h4 { color: #f7c948; border-bottom-color: rgba(200,240,210,0.15); }
         #skills .int-card {
           background: rgba(255,255,255,0.07);
           border-color: rgba(100,220,140,0.18);
@@ -396,7 +390,7 @@ export default function Portfolio() {
         #skills .int-desc  { color: rgba(200,240,210,0.6); }
         #skills h3 { color: #e8f5e9 !important; }
 
-        /* PUBLICATIONS — rich burgundy/wine */
+        /* PUBLICATIONS — deep burgundy/wine (dark) */
         #publications {
           padding: 5.5rem 1.5rem;
           background: linear-gradient(145deg, #2d1b2e 0%, #3a1f3c 45%, #251525 100%);
@@ -408,15 +402,15 @@ export default function Portfolio() {
           background: radial-gradient(circle, rgba(200,100,220,0.1) 0%, transparent 70%);
           bottom: 0; right: 5%;
         }
-        #publications .sec-label { color: #f7c948; }
-        #publications .sec-title { color: #f5e8ff; }
-        #publications .sec-sub   { color: rgba(220,190,240,0.6); }
-        #publications .pub-item  { border-bottom-color: rgba(200,150,220,0.2); }
-        #publications .pub-year  { color: #f7c948; }
-        #publications .pub-title { color: #e8d0ff; }
+        #publications .sec-label   { color: #f7c948; }
+        #publications .sec-title   { color: #f5e8ff; }
+        #publications .sec-sub     { color: rgba(220,190,240,0.6); }
+        #publications .pub-item    { border-bottom-color: rgba(200,150,220,0.2); }
+        #publications .pub-year    { color: #f7c948; }
+        #publications .pub-title   { color: #e8d0ff; }
         #publications .pub-journal { color: rgba(200,170,230,0.65); }
 
-        /* CONTACT — deep charcoal (kept original) */
+        /* CONTACT — deep charcoal */
         #contact { padding: 5.5rem 1.5rem; background: var(--ink); }
         .c-item {
           display: flex; gap: 1rem; align-items: center;
@@ -440,7 +434,8 @@ export default function Portfolio() {
         .f-input::placeholder { color: rgba(245,242,236,.25); }
         .f-input:focus { border-color: var(--gold); }
 
-        /* ── SECTION SHARED ── */
+        /* Shared section elements */
+        .sec-inner { max-width: 1060px; margin: 0 auto; }
         .sec-label {
           text-align: center; font-family: var(--mono);
           font-size: .72rem; letter-spacing: .2em; text-transform: uppercase;
@@ -457,8 +452,6 @@ export default function Portfolio() {
           margin: 0 auto 3rem; font-size: .9rem; color: var(--muted); line-height: 1.75;
         }
 
-        /* ── ABOUT LAYOUT ── */
-        .sec-inner { max-width: 1060px; margin: 0 auto; }
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4.5rem; align-items: center; }
         .about-photo {
           width: 100%; border-radius: 18px; min-height: 460px;
@@ -467,32 +460,23 @@ export default function Portfolio() {
           font-size: 8rem; overflow: hidden;
           box-shadow: 0 20px 60px rgba(26,58,92,0.2);
         }
-        .about-text h3 {
-          font-family: var(--serif); font-size: 1.7rem; font-weight: 600;
-          color: var(--accent); margin-bottom: 1rem;
-        }
-        .about-text p {
-          font-family: var(--sans); font-size: .9rem;
-          color: #3a3a45; line-height: 1.85; margin-bottom: .9rem;
-        }
+        .about-text h3 { font-family: var(--serif); font-size: 1.7rem; font-weight: 600; color: var(--accent); margin-bottom: 1rem; }
+        .about-text p  { font-family: var(--sans); font-size: .9rem; color: #3a3a45; line-height: 1.85; margin-bottom: .9rem; }
         .stat-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1.75rem; }
         .stat-card {
           background: rgba(255,255,255,0.75); border: 1px solid rgba(200,147,58,0.2);
-          backdrop-filter: blur(6px);
-          padding: 1.2rem 1rem; text-align: center; border-radius: 10px;
+          backdrop-filter: blur(6px); padding: 1.2rem 1rem; text-align: center; border-radius: 10px;
           transition: box-shadow .25s, transform .25s;
         }
         .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(26,58,92,0.1); }
         .stat-num { font-family: var(--serif); font-size: 2.2rem; font-weight: 600; color: var(--accent); line-height: 1; }
         .stat-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); margin-top: .3rem; letter-spacing: .1em; text-transform: uppercase; }
 
-        /* ── EDUCATION LAYOUT ── */
         .edu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
         .edu-card {
           border: 1px solid rgba(200,147,58,0.15); padding: 1.75rem;
           background: rgba(255,255,255,0.7); border-radius: 12px;
-          backdrop-filter: blur(8px);
-          transition: box-shadow .25s, transform .25s;
+          backdrop-filter: blur(8px); transition: box-shadow .25s, transform .25s;
         }
         .edu-card:hover { box-shadow: 0 10px 36px rgba(26,58,92,0.1); transform: translateY(-2px); }
         .edu-icon {
@@ -503,8 +487,8 @@ export default function Portfolio() {
         }
         .edu-degree { font-family: var(--serif); font-size: 1.15rem; font-weight: 600; color: var(--accent); margin-bottom: .35rem; }
         .edu-school { font-family: var(--sans); font-size: .82rem; color: var(--muted); margin-bottom: .6rem; }
-        .edu-year { font-family: var(--mono); font-size: .72rem; color: var(--gold); font-weight: 500; }
-        .edu-desc { font-family: var(--sans); margin-top: .9rem; font-size: .82rem; color: var(--muted); line-height: 1.7; }
+        .edu-year   { font-family: var(--mono); font-size: .72rem; color: var(--gold); font-weight: 500; }
+        .edu-desc   { font-family: var(--sans); margin-top: .9rem; font-size: .82rem; color: var(--muted); line-height: 1.7; }
         .mission-box {
           background: rgba(255,255,255,0.65); border-left: 3px solid var(--gold);
           padding: 1.75rem 2rem; margin-top: 2rem; border-radius: 0 10px 10px 0;
@@ -515,47 +499,36 @@ export default function Portfolio() {
         .tags-row { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1.25rem; }
         .tag {
           font-family: var(--sans); padding: .35rem .9rem; border-radius: 99px;
-          border: 1px solid rgba(26,58,92,0.2);
-          background: rgba(255,255,255,0.7);
+          border: 1px solid rgba(26,58,92,0.2); background: rgba(255,255,255,0.7);
           font-size: .75rem; color: var(--accent); font-weight: 500;
         }
 
-        /* ── SKILLS LAYOUT ── */
         .skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; }
-        .skills-group h4 {
-          font-family: var(--mono); font-size: .72rem; font-weight: 500;
-          letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
-          margin-bottom: 1.5rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border);
-        }
         .interests-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1rem; margin-top: 1rem; }
         .int-card {
           background: rgba(255,255,255,0.7); border: 1px solid rgba(200,147,58,0.15);
           padding: 1.35rem; text-align: center; border-radius: 10px;
-          backdrop-filter: blur(6px);
-          transition: box-shadow .25s, transform .25s;
+          backdrop-filter: blur(6px); transition: box-shadow .25s, transform .25s;
         }
         .int-card:hover { box-shadow: 0 8px 28px rgba(26,58,92,0.1); transform: translateY(-2px); }
-        .int-icon { font-size: 1.6rem; display: block; margin-bottom: .55rem; }
+        .int-icon  { font-size: 1.6rem; display: block; margin-bottom: .55rem; }
         .int-title { font-family: var(--serif); font-size: .98rem; font-weight: 600; color: var(--accent); margin-bottom: .3rem; }
-        .int-desc { font-family: var(--sans); font-size: .75rem; color: var(--muted); line-height: 1.55; }
+        .int-desc  { font-family: var(--sans); font-size: .75rem; color: var(--muted); line-height: 1.55; }
 
-        /* ── PUBLICATIONS LAYOUT ── */
         .pub-item {
           display: flex; gap: 1.25rem; align-items: flex-start;
           padding: 1.35rem 0; border-bottom: 1px solid rgba(212,207,196,0.6);
         }
-        .pub-year { font-family: var(--mono); min-width: 48px; font-size: .72rem; font-weight: 500; color: var(--gold); padding-top: .2rem; flex-shrink: 0; }
-        .pub-title { font-family: var(--serif); font-size: 1rem; font-weight: 400; color: var(--accent); margin-bottom: .25rem; line-height: 1.45; }
+        .pub-year    { font-family: var(--mono); min-width: 48px; font-size: .72rem; font-weight: 500; color: var(--gold); padding-top: .2rem; flex-shrink: 0; }
+        .pub-title   { font-family: var(--serif); font-size: 1rem; font-weight: 400; color: var(--accent); margin-bottom: .25rem; line-height: 1.45; }
         .pub-journal { font-family: var(--sans); font-size: .78rem; color: var(--muted); font-style: italic; }
 
-        /* ── FOOTER ── */
         footer {
           text-align: center; padding: 1.5rem;
           background: #050508; color: rgba(245,242,236,.25);
           font-family: var(--mono); font-size: .7rem; letter-spacing: .08em;
         }
 
-        /* ── MOBILE ── */
         @media (max-width: 768px) {
           nav { padding: .9rem 1.25rem; }
           .nav-links { display: none; }
@@ -569,7 +542,7 @@ export default function Portfolio() {
           .hamburger { display: flex; }
           #about, #education, #skills, #publications, #contact { padding: 4rem 1.25rem; }
           .about-grid, .edu-grid, .skills-grid { grid-template-columns: 1fr; gap: 2rem; }
-          .contact-grid { grid-template-columns: 1fr; gap: 2rem; }
+          .contact-grid { grid-template-columns: 1fr !important; gap: 2rem !important; }
           .interests-grid { grid-template-columns: 1fr 1fr; }
           .hero-name { font-size: 2.4rem; }
         }
@@ -578,7 +551,7 @@ export default function Portfolio() {
         }
       `}</style>
 
-      {/* ── NAV ── */}
+      {/* NAV */}
       <nav>
         <button className="brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
           Victor Lumumba Wandera
@@ -595,7 +568,7 @@ export default function Portfolio() {
         </button>
       </nav>
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <section id="hero">
         <Reveal>
           <h1 className="hero-name">Victor Lumumba Wandera</h1>
@@ -608,9 +581,9 @@ export default function Portfolio() {
         </Reveal>
         <Reveal delay={220}>
           <p className="hero-bio">
-            Welcome to my portfolio. I'm a dedicated statistician and data analyst at Chuka
-            University's Centre for Data Analytics and Modelling, with peer-reviewed publications
-            in international journals. Explore my research and let's build knowledge together.
+            Welcome to my portfolio. I&apos;m a dedicated statistician and data analyst at Chuka
+            University&apos;s Centre for Data Analytics and Modelling, with peer-reviewed publications
+            in international journals. Explore my research and let&apos;s build knowledge together.
           </p>
         </Reveal>
         <Reveal delay={320}>
@@ -628,14 +601,14 @@ export default function Portfolio() {
         </Reveal>
       </section>
 
-      {/* ── ABOUT ── */}
+      {/* ABOUT */}
       <section id="about">
         <div className="sec-inner">
           <Reveal><p className="sec-label">About Me</p></Reveal>
           <div className="about-grid" style={{ marginTop: "1rem" }}>
             <Reveal dir="left">
               <div className="about-photo">
-                <img 
+                <img
                   src="https://res.cloudinary.com/dacpiss4b/image/upload/v1772514964/main_image_wjyuuq.jpg"
                   alt="Victor Lumumba Wandera"
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
@@ -644,17 +617,17 @@ export default function Portfolio() {
             </Reveal>
             <Reveal dir="right">
               <div className="about-text">
-                <h3>Hi! I'm Victor Lumumba Wandera</h3>
+                <h3>Hi! I&apos;m Victor Lumumba Wandera</h3>
                 <p>
-                  A dynamic statistician and data analyst based at Chuka University's Centre for
+                  A dynamic statistician and data analyst based at Chuka University&apos;s Centre for
                   Data Analytics and Modelling (CDAM). My passion lies in leveraging statistical
                   methods and machine learning to extract meaningful insights from complex datasets.
                 </p>
                 <p>
                   I have contributed to peer-reviewed journals in AI, public health, epidemiology,
                   and financial analytics. What drives me is the ability to build evidence-based
-                  solutions that make a meaningful impact — because great analysis isn't just about
-                  numbers, it's about crafting insights that are actionable and useful.
+                  solutions that make a meaningful impact — because great analysis isn&apos;t just about
+                  numbers, it&apos;s about crafting insights that are actionable and useful.
                 </p>
                 <p>
                   I am always learning, exploring new methodologies, and finding better ways to
@@ -675,13 +648,12 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── EDUCATION ── */}
+      {/* EDUCATION */}
       <section id="education">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Educational Background</p></Reveal>
           <Reveal delay={80}><h2 className="sec-title">Academic <em>Journey</em></h2></Reveal>
           <Reveal delay={140}><p className="sec-sub">Built on a strong quantitative foundation at Chuka University.</p></Reveal>
-
           <div className="edu-grid">
             <Reveal dir="left" delay={80}>
               <div className="edu-card">
@@ -695,14 +667,13 @@ export default function Portfolio() {
             <Reveal dir="right" delay={80}>
               <div className="edu-card">
                 <div className="edu-icon">🏅</div>
-                <p className="edu-degree">BSc Economics & Statistics</p>
+                <p className="edu-degree">BSc Economics &amp; Statistics</p>
                 <p className="edu-school">Chuka University — 2nd Class Hons. (Upper Division)</p>
                 <span className="edu-year">📅 Sep 2016 – Dec 2020</span>
                 <p className="edu-desc">Solid grounding in econometrics, statistical theory, probability, and research methods — forming the bedrock for postgraduate and applied research work in data analytics and modelling.</p>
               </div>
             </Reveal>
           </div>
-
           <Reveal delay={100}>
             <div className="mission-box">
               <p><strong>Mission Statement: </strong>To skillfully apply statistical and research expertise to generate actionable insights. As a dedicated statistician and aspiring research officer, I am committed to conducting meticulous quantitative and qualitative analyses that empower informed decision-making. By employing cutting-edge methodologies, I strive to unravel meaningful patterns within data — contributing to innovation and evidence-based profitability.</p>
@@ -719,24 +690,22 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── SKILLS ── */}
+      {/* SKILLS */}
       <section id="skills">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Skills</p></Reveal>
           <Reveal delay={80}><h2 className="sec-title">Technical <em>Proficiency</em></h2></Reveal>
           <Reveal delay={140}><p className="sec-sub">Proficient in a broad range of statistical tools and analytical frameworks.</p></Reveal>
-
           <div className="skills-grid">
             <div>
-              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase", color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Statistical Software</h4>
+              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase" as const, color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Statistical Software</h4>
               {SKILLS_STAT.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
             <div>
-              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase", color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Analytics & Machine Learning</h4>
+              <h4 style={{ fontFamily: "var(--mono)", fontSize: ".72rem", fontWeight: 500, letterSpacing: ".18em", textTransform: "uppercase" as const, color: "#f7c948", marginBottom: "1.5rem", paddingBottom: ".5rem", borderBottom: "1px solid rgba(200,240,210,0.15)" }}>Analytics &amp; Machine Learning</h4>
               {SKILLS_ML.map((s) => <SkillBar key={s.name} {...s} />)}
             </div>
           </div>
-
           <Reveal delay={80}>
             <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1.5rem", fontSize: "1.6rem", fontWeight: 300, color: "#e8f5e9" }}>
               What Excites Me About Data Science
@@ -756,7 +725,7 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── PUBLICATIONS ── */}
+      {/* PUBLICATIONS */}
       <section id="publications">
         <div className="sec-inner">
           <Reveal><p className="sec-label">Research</p></Reveal>
@@ -778,19 +747,12 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
+      {/* CONTACT */}
       <section id="contact">
         <div className="sec-inner">
-          <Reveal>
-            <p className="sec-label" style={{ color: "var(--gold)" }}>Contact</p>
-          </Reveal>
-          <Reveal delay={80}>
-            <h2 className="sec-title" style={{ color: "#f5f2ec" }}>Let's <em>Collaborate</em></h2>
-          </Reveal>
-          <Reveal delay={140}>
-            <p className="sec-sub" style={{ color: "var(--muted)" }}>Open to research collaborations, consulting engagements, and academic partnerships.</p>
-          </Reveal>
-
+          <Reveal><p className="sec-label" style={{ color: "var(--gold)" }}>Contact</p></Reveal>
+          <Reveal delay={80}><h2 className="sec-title" style={{ color: "#f5f2ec" }}>Let&apos;s <em>Collaborate</em></h2></Reveal>
+          <Reveal delay={140}><p className="sec-sub" style={{ color: "var(--muted)" }}>Open to research collaborations, consulting engagements, and academic partnerships.</p></Reveal>
           <div className="contact-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "start" }}>
             <Reveal dir="left">
               <div>
@@ -816,23 +778,20 @@ export default function Portfolio() {
                 </div>
               </div>
             </Reveal>
-
             <Reveal dir="right">
               <div style={{ display: "flex", flexDirection: "column", gap: ".85rem" }}>
                 {["Your Name","Your Email","Subject"].map((ph) => (
                   <input key={ph} type={ph === "Your Email" ? "email" : "text"} placeholder={ph} className="f-input" />
                 ))}
                 <textarea placeholder="Your message…" rows={5} className="f-input" style={{ resize: "vertical" }} />
-                <button className="btn-primary" style={{ width: "fit-content" }}>
-                  Send Message →
-                </button>
+                <button className="btn-primary" style={{ width: "fit-content" }}>Send Message →</button>
               </div>
             </Reveal>
           </div>
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer>
         © {new Date().getFullYear()} Victor Lumumba Wandera · All rights reserved · beyonddataanalytics.online
       </footer>
