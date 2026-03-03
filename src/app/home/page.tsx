@@ -153,6 +153,27 @@ const MEMBERSHIPS = [
   { name: "Applied Malaria Modeling Network (AMMNet)", num: "Kenya Chapter" },
 ];
 
+const STAGE_IMGS = [
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570330/WhatsApp_Image_2026-03-02_at_4.17.28_PM_wkcadv.jpg", caption: "Conference Presentation" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570326/WhatsApp_Image_2026-03-02_at_4.17.24_PM_1_hfempc.jpg", caption: "Academic Keynote" },
+];
+
+const CDAM_IMGS = [
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570330/WhatsApp_Image_2026-03-02_at_4.17.23_PM_miakfq.jpg", caption: "CDAM Team" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570329/WhatsApp_Image_2026-03-02_at_4.17.23_PM_2_cnygck.jpg", caption: "Research Collaboration" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570329/WhatsApp_Image_2026-03-02_at_4.17.27_PM_ielxnj.jpg", caption: "Data Analytics Team" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570329/WhatsApp_Image_2026-03-02_at_4.17.26_PM_1_xkzgp1.jpg", caption: "CDAM Workshop" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570329/WhatsApp_Image_2026-03-02_at_4.17.26_PM_2_olpxqi.jpg", caption: "Research Meeting" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570327/WhatsApp_Image_2026-03-02_at_4.17.25_PM_2_hne4so.jpg", caption: "CDAM Members" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570326/WhatsApp_Image_2026-03-02_at_4.17.24_PM_2_geljsz.jpg", caption: "Analytics Session" },
+];
+
+const LAB_IMGS = [
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570328/WhatsApp_Image_2026-03-02_at_4.17.24_PM_uammec.jpg", caption: "Statistical Computing Lab" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570327/WhatsApp_Image_2026-03-02_at_4.17.25_PM_ihhisp.jpg", caption: "R & Python Training" },
+  { src: "https://res.cloudinary.com/dacpiss4b/image/upload/v1772570328/WhatsApp_Image_2026-03-02_at_4.17.25_PM_1_jsnmzg.jpg", caption: "Data Analysis Workshop" },
+];
+
 const INTERESTS = [
   { icon: "📊", title: "Applied Statistical Modeling & ML", desc: "Developing interpretable ML models to predict malaria incidence and psychological distress, emphasizing model transparency in low-resource settings." },
   { icon: "🌍", title: "ML/DL for Socioeconomic Challenges", desc: "Extending ML and deep learning to study climate change, agricultural productivity, food security, and financial modeling in sub-Saharan Africa." },
@@ -233,6 +254,48 @@ function SkillBar({ name, level }: { name: string; level: number }) {
         <div style={{ height: "100%", borderRadius: "2px", background: "linear-gradient(90deg, #f7c948, #ff8c42)", width: visible ? `${level}%` : "0%", transition: "width 1.1s cubic-bezier(.4,0,.2,1) 150ms" }} />
       </div>
     </div>
+  );
+}
+
+/* ─── Lightbox ────────────────────────────────────────────────────────────────── */
+function Lightbox({ src, caption, onClose }: { src: string; caption: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+  return (
+    <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1000, background: "rgba(5,5,12,0.92)", display: "flex", alignItems: "center", justifyContent: "center", padding: "2rem", backdropFilter: "blur(10px)", cursor: "zoom-out" }}>
+      <div onClick={e => e.stopPropagation()} style={{ maxWidth: "900px", width: "100%", position: "relative" }}>
+        <img src={src} alt={caption} style={{ width: "100%", borderRadius: "12px", boxShadow: "0 30px 80px rgba(0,0,0,0.6)" }} />
+        <p style={{ fontFamily: "var(--mono)", fontSize: ".72rem", color: "rgba(245,242,236,0.5)", textAlign: "center", marginTop: ".75rem", letterSpacing: ".1em" }}>{caption}</p>
+        <button onClick={onClose} style={{ position: "absolute", top: "-1rem", right: "-1rem", width: "32px", height: "32px", borderRadius: "50%", background: "var(--gold)", border: "none", color: "#fff", cursor: "pointer", fontSize: "1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Photo strip ─────────────────────────────────────────────────────────────── */
+function PhotoStrip({ images, cols = 3, aspect = "3/2" }: { images: { src: string; caption: string }[]; cols?: number; aspect?: string }) {
+  const [light, setLight] = useState<{ src: string; caption: string } | null>(null);
+  return (
+    <>
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "0.75rem" }}>
+        {images.map((img, i) => (
+          <div key={i} onClick={() => setLight(img)}
+            style={{ position: "relative", borderRadius: "10px", overflow: "hidden", aspectRatio: aspect, cursor: "zoom-in", background: "rgba(255,255,255,0.05)" }}
+            onMouseEnter={e => { (e.currentTarget.querySelector(".photo-overlay") as HTMLElement).style.opacity = "1"; (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1.05)"; }}
+            onMouseLeave={e => { (e.currentTarget.querySelector(".photo-overlay") as HTMLElement).style.opacity = "0"; (e.currentTarget.querySelector("img") as HTMLImageElement).style.transform = "scale(1)"; }}
+          >
+            <img src={img.src} alt={img.caption} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", transition: "transform 0.4s ease" }} />
+            <div className="photo-overlay" style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(5,5,12,0.8) 0%, transparent 55%)", opacity: 0, transition: "opacity 0.3s", display: "flex", alignItems: "flex-end", padding: ".75rem" }}>
+              <span style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "rgba(245,242,236,0.85)", letterSpacing: ".08em" }}>{img.caption}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      {light && <Lightbox src={light.src} caption={light.caption} onClose={() => setLight(null)} />}
+    </>
   );
 }
 
@@ -708,6 +771,22 @@ export default function Portfolio() {
               </Reveal>
             ))}
           </div>
+
+          {/* Stage / presentation photos */}
+          <Reveal delay={80}>
+            <div style={{ marginTop: "2.5rem" }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "#f7c948", letterSpacing: ".2em", textTransform: "uppercase", marginBottom: "1rem", textAlign: "center" }}>On Stage</p>
+              <PhotoStrip images={STAGE_IMGS} cols={2} aspect="4/3" />
+            </div>
+          </Reveal>
+
+          {/* CDAM team photos */}
+          <Reveal delay={100}>
+            <div style={{ marginTop: "2.5rem" }}>
+              <p style={{ fontFamily: "var(--mono)", fontSize: ".65rem", color: "#f7c948", letterSpacing: ".2em", textTransform: "uppercase", marginBottom: "1rem", textAlign: "center" }}>With the CDAM Team · Centre for Data Analytics &amp; Modelling</p>
+              <PhotoStrip images={CDAM_IMGS} cols={4} aspect="1/1" />
+            </div>
+          </Reveal>
         </div>
       </section>
 
@@ -783,6 +862,12 @@ export default function Portfolio() {
               </Reveal>
             ))}
           </div>
+
+          <Reveal delay={80}>
+            <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 1rem", fontSize: "1.6rem", fontWeight: 300, color: "#ece8ff" }}>Training <em>in Action</em></h3>
+            <p style={{ fontFamily: "var(--sans)", fontSize: ".82rem", color: "rgba(200,195,240,0.5)", textAlign: "center", marginBottom: "1.25rem" }}>Hands-on statistical computing and data science workshops</p>
+            <PhotoStrip images={LAB_IMGS} cols={3} aspect="4/3" />
+          </Reveal>
 
           <Reveal delay={80}>
             <h3 style={{ fontFamily: "var(--serif)", textAlign: "center", margin: "3.5rem 0 .5rem", fontSize: "1.6rem", fontWeight: 300, color: "#ece8ff" }}>My Working <em>Process</em></h3>
