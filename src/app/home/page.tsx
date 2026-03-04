@@ -183,6 +183,13 @@ const INTERESTS = [
   { icon: "📚", title: "Teaching & Mentoring", desc: "Sharing statistical and data science knowledge with the next generation of researchers and analysts." },
 ];
 
+const PROFILE_LINKS = [
+  { label: "GitHub", href: "https://github.com/Lumumba1992", iconSrc: "/github.ico" },
+  { label: "LinkedIn", href: "#", iconSrc: "/linkedin.ico" },
+  { label: "Google Scholar", href: "#", iconSrc: "/google_scholar.ico" },
+  { label: "ResearchGate", href: "#", iconSrc: "/researchgate.ico" },
+];
+
 /* ─── Typewriter hook ─────────────────────────────────────────────────────────── */
 function useTypewriter(words: string[]) {
   const [display, setDisplay] = useState("");
@@ -548,6 +555,8 @@ export default function Portfolio() {
         .social-row { display: flex; gap: 1.1rem; justify-content: center; position: relative; z-index: 1; }
         .social-icon { width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid rgba(245,242,236,0.2); display: flex; align-items: center; justify-content: center; font-size: 1rem; text-decoration: none; color: rgba(245,242,236,0.8); transition: border-color .2s, color .2s, transform .15s; background: rgba(255,255,255,0.06); }
         .social-icon:hover { border-color: var(--gold); color: var(--gold); transform: translateY(-2px); }
+        .social-icon-img { width: 18px; height: 18px; object-fit: contain; transition: transform .2s; }
+        .social-icon:hover .social-icon-img { transform: scale(1.06); }
 
         /* ABOUT — warm cream */
         #about { padding: 5.5rem 1.5rem; background: linear-gradient(160deg, #fdf6e3 0%, #faebd7 50%, #fdf3e0 100%); position: relative; overflow: hidden; }
@@ -620,9 +629,14 @@ export default function Portfolio() {
         #contact { padding: 5.5rem 1.5rem; background: var(--ink); }
         .c-item { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.2rem; text-decoration: none; }
         .c-icon { width: 40px; height: 40px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: border-color .2s, background .2s; }
+        .c-icon-img { width: 18px; height: 18px; object-fit: contain; }
         .c-item:hover .c-icon { border-color: var(--gold); background: rgba(200,147,58,0.1); }
+        .c-item:hover .c-icon-img { transform: scale(1.04); }
         .c-lbl { font-family: var(--mono); font-size: .65rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; margin-bottom: .1rem; }
         .c-val { font-family: var(--sans); font-size: .85rem; color: rgba(245,242,236,.85); font-weight: 500; }
+        .link-row { display: flex; align-items: center; gap: .5rem; font-family: var(--sans); font-size: .83rem; color: rgba(245,242,236,.65); margin-bottom: .5rem; text-decoration: none; transition: color .2s; }
+        .link-row:hover { color: rgba(245,242,236,.92); }
+        .link-row img { width: 14px; height: 14px; object-fit: contain; }
         .f-input { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 4px; padding: .8rem 1rem; color: #f5f2ec; font-family: var(--sans); font-size: .87rem; outline: none; transition: border-color .2s; width: 100%; }
         .f-input::placeholder { color: rgba(245,242,236,.25); }
         .f-input:focus { border-color: var(--gold); }
@@ -818,10 +832,11 @@ export default function Portfolio() {
         </Reveal>
         <Reveal delay={500}>
           <div className="social-row">
-            <a className="social-icon" href="mailto:lumumbavictor172@gmail.com" title="Email">✉</a>
-            <a className="social-icon" href="https://beyonddataanalytics.online" target="_blank" rel="noopener noreferrer" title="Website">🌐</a>
-            <a className="social-icon" href="tel:+254706038599" title="Phone">☎</a>
-            <a className="social-icon" href="https://github.com/Lumumba1992" target="_blank" rel="noopener noreferrer" title="GitHub">⌨</a>
+            <a className="social-icon" href="mailto:lumumbavictor172@gmail.com" title="Email"><img className="social-icon-img" src="/Mail.ico" alt="Email" /></a>
+            <a className="social-icon" href="https://beyonddataanalytics.online" target="_blank" rel="noopener noreferrer" title="Website"><img className="social-icon-img" src="/Website.ico" alt="Website" /></a>
+            <a className="social-icon" href="tel:+254706038599" title="Telephone"><img className="social-icon-img" src="/phone.ico" alt="Telephone" /></a>
+            <a className="social-icon" href="https://github.com/Lumumba1992" target="_blank" rel="noopener noreferrer" title="GitHub"><img className="social-icon-img" src="/github.ico" alt="GitHub" /></a>
+            <a className="social-icon" href="#" title="LinkedIn"><img className="social-icon-img" src="/linkedin.ico" alt="LinkedIn" /></a>
           </div>
         </Reveal>
       </section>
@@ -1128,8 +1143,9 @@ export default function Portfolio() {
 
           <Reveal delay={100}>
             <div style={{ display: "flex", gap: "1rem", justifyContent: "center", marginTop: "2rem", flexWrap: "wrap" }}>
-              {[["⌨ GitHub","https://github.com/Lumumba1992"],["📖 Google Scholar","#"],["🔬 ResearchGate","#"]].map(([label, href]) => (
-                <a key={label as string} href={href as string} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "var(--sans)", fontSize: ".8rem", padding: ".6rem 1.3rem", border: "1px solid rgba(200,150,220,0.3)", borderRadius: "6px", color: "#c8b8ff", textDecoration: "none", background: "rgba(200,150,220,0.07)", transition: "border-color .2s, background .2s" }}>
+              {PROFILE_LINKS.filter(({ label }) => label !== "LinkedIn").map(({ label, href, iconSrc }) => (
+                <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: ".45rem", fontFamily: "var(--sans)", fontSize: ".8rem", padding: ".6rem 1.3rem", border: "1px solid rgba(200,150,220,0.3)", borderRadius: "6px", color: "#c8b8ff", textDecoration: "none", background: "rgba(200,150,220,0.07)", transition: "border-color .2s, background .2s" }}>
+                  <img src={iconSrc} alt={label} style={{ width: "14px", height: "14px", objectFit: "contain" }} />
                   {label}
                 </a>
               ))}
@@ -1188,14 +1204,14 @@ export default function Portfolio() {
             <Reveal dir="left">
               <div>
                 {[
-                  { href: "mailto:lumumbavictor172@gmail.com", icon: "✉", lbl: "Primary Email", val: "lumumbavictor172@gmail.com" },
-                  { href: "mailto:wanderavictor2@yahoo.com",   icon: "✉", lbl: "Alt Email",     val: "wanderavictor2@yahoo.com" },
-                  { href: "tel:+254706038599",                 icon: "☎", lbl: "Phone",         val: "+254 706 038 599" },
-                  { href: "#",                                 icon: "📍", lbl: "Location",      val: "Chuka, Kenya (Remote-Friendly)" },
-                  { href: "https://beyonddataanalytics.online", icon: "🌐", lbl: "Website",     val: "beyonddataanalytics.online" },
-                ].map(({ href, icon, lbl, val }) => (
+                  { href: "mailto:lumumbavictor172@gmail.com", iconSrc: "/Mail.ico",     lbl: "Primary Email", val: "lumumbavictor172@gmail.com" },
+                  { href: "mailto:wanderavictor2@yahoo.com",   iconSrc: "/Mail.ico",     lbl: "Alt Email",     val: "wanderavictor2@yahoo.com" },
+                  { href: "tel:+254706038599",                 iconSrc: "/phone.ico",    lbl: "Telephone",     val: "+254 706 038 599" },
+                  { href: "https://maps.google.com/?q=Chuka%2C+Kenya", iconSrc: "/location.ico", lbl: "Location",      val: "Chuka, Kenya (Remote-Friendly)" },
+                  { href: "https://beyonddataanalytics.online", iconSrc: "/Website.ico",  lbl: "Website",       val: "beyonddataanalytics.online" },
+                ].map(({ href, iconSrc, lbl, val }) => (
                   <a key={lbl} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="c-item">
-                    <div className="c-icon">{icon}</div>
+                    <div className="c-icon"><img className="c-icon-img" src={iconSrc} alt={lbl} /></div>
                     <div>
                       <p className="c-lbl">{lbl}</p>
                       <p className="c-val">{val}</p>
@@ -1205,14 +1221,9 @@ export default function Portfolio() {
 
                 <div style={{ marginTop: "1.5rem" }}>
                   <p className="c-lbl" style={{ marginBottom: ".75rem" }}>Connect with me</p>
-                  {[
-                    ["⌨ GitHub", "https://github.com/Lumumba1992"],
-                    ["💼 LinkedIn", "#"],
-                    ["📖 Google Scholar", "#"],
-                    ["🔬 ResearchGate", "#"],
-                  ].map(([label, href]) => (
-                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" style={{ display: "flex", alignItems: "center", gap: ".5rem", fontFamily: "var(--sans)", fontSize: ".83rem", color: "rgba(245,242,236,.65)", marginBottom: ".5rem", textDecoration: "none", transition: "color .2s" }}>
-                      <span style={{ color: "var(--gold)" }}>→</span> {label}
+                  {PROFILE_LINKS.map(({ label, href, iconSrc }) => (
+                    <a key={label} href={href} target="_blank" rel="noopener noreferrer" className="link-row">
+                      <img src={iconSrc} alt={label} /> {label}
                     </a>
                   ))}
                 </div>
